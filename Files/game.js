@@ -19,7 +19,7 @@ check_move_to_next();
 function disconnect_user() {
 	xmlrequest("diconnect_user", function() {
 		if (this.readyState == 4) {
-			window.location.href = '/';
+			window.location.href = '/pyhoot/';
 		}
 	});
 }

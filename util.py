@@ -3,12 +3,12 @@
 ## @file util.py Implementation of @ref PyHoot.util
 
 
-import httplib
+#import httplib
 import mimetypes
 import socket
 from xml.etree import ElementTree
 
-from . import constants
+import constants
 
 
 def creat_nonblocking_socket():
@@ -94,7 +94,7 @@ def remove_from_sysyem(common, pid):
 
 def to_string(element):
     """ElementTree.Element object to string"""
-    return ElementTree.tostring(element, constants.ENCODING)
+    return ElementTree.tostring(element, constants.ENCODING).decode('utf-8')
 
 
 def boolean_to_xml(boolean):

@@ -7,9 +7,10 @@
 ## @file services.py All the services get the method we need and return
 
 import os.path
+import glob
 from xml.etree import ElementTree
 
-from . import base, game, util
+import base, game, util, config
 
 
 class Service(base.Base):
@@ -41,10 +42,11 @@ class Service(base.Base):
         """Headers of the service, base if for any HTTP page"""
         if self._content_page is None:
             self._content_page = self.content()
-        return util.create_headers_response(200,
-                                            len(self._content_page),
-                                            extra,
-                                            ".html")
+##         return util.create_headers_response(200,
+##                                             len(self._content_page),
+##                                             extra,
+##                                             ".html")
+        return extra
 
     def read_buff(self, buff_size):
         """return the content page and update self._finished_reading"""
@@ -70,6 +72,7 @@ class XMLService(Service):
         """Headers of the service, base if for any HTTP page"""
         if self._content_page is None:
             self._content_page = self.content()
+        return extra
         return util.create_headers_response(200,
                                             len(self._content_page),
                                             extra,
@@ -86,22 +89,24 @@ class register_quiz(Service):
     def __init__(self, quiz_name, common, base_directory, pid=None):
         """Initialization"""
         super(register_quiz, self).__init__()
-        self._quiz_name = quiz_name[0]
+        self._quiz_name = quiz_name
         if pid is not None:
             util.remove_from_sysyem(
                 common,
                 pid,
             )
-        g = self.register_master(quiz_name[0], common, base_directory)
+        g = self.register_master(quiz_name, common, base_directory)
 
         ## Master Player ID
         self.master_pid = g.pid
 
     def headers(self, extra):
         """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "/quiz.html",
-                      "Set-Cookie": "pid=%s" % self.master_pid})
-        return util.create_headers_response(302, extra_headers=extra)
+        extra.update({"Location": "%s/quiz.html" % config.uriprefix,
+                      "Set-Cookie": ("pid", self.master_pid)})
+        extra.update({"Status-Code": 302})
+        #return util.create_headers_response(302, extra_headers=extra)
+        return extra
 
     def register_master(self, quiz_name, common, base_directory):
         """Creating GamePlayer object, registering it and returning it"""
@@ -119,8 +124,10 @@ class homepage(Service):
 
     def headers(self, extra):
         """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "/home.html"})
-        return util.create_headers_response(302, extra_headers=extra)
+        extra.update({"Location": "%s/home.html" % config.uriprefix})
+        extra.update({"Status-Code": 302})
+        #return util.create_headers_response(302, extra_headers=extra)
+        return extra
 
 
 class answer(Service):
@@ -133,7 +140,7 @@ class answer(Service):
     def __init__(self, letter, game):
         """Initialization"""
         super(answer, self).__init__()
-        game.answer = letter[0]
+        game.answer = letter
 
 
 class getnames(XMLService):
@@ -148,6 +155,12 @@ class getnames(XMLService):
         super(getnames, self).__init__()
         self._game = game
         self._common = common
+
+    def headers(self, extra):
+      if self._game is None:
+        extra.update({"Location": "%s/home.html" % config.uriprefix})
+        extra.update({"Status-Code": 302})
+      return extra
 
     def content(self):
         """The content of the service"""
@@ -186,7 +199,7 @@ class check_test(XMLService):
         super(check_test, self).__init__()
 
         ## Join number
-        self.data = int(join_number[0])
+        self.data = int(join_number)
 
         ## Common database
         self.common = common
@@ -211,10 +224,10 @@ class check_name(XMLService):
         super(check_name, self).__init__()
 
         ## The join number
-        self.data = int(join_number[0])
+        self.data = int(join_number)
 
         ## The name
-        self.name = name[0]
+        self.name = name
 
         ## Common library
         self.common = common
@@ -247,20 +260,23 @@ class join(Service):
             util.remove_from_sysyem(common, pid)
 
         ## Player ID
-        self.player_pid = self.register_player(
-            int(join_number[0]),
-            name[0],
-            common
-        ).pid
+        g  = self.register_player(int(join_number), name, common)
+        self.player_pid = ""
+        if g:
+          self.player_pid = g.pid
 
     def headers(self, extra):
         """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "/game.html",
-                      "Set-Cookie": "pid=%s" % self.player_pid})
-        return util.create_headers_response(302, extra_headers=extra)
+        extra.update({"Location": "%s/game.html" % config.uriprefix,
+                      "Set-Cookie": ("pid", self.player_pid)})
+        extra.update({"Status-Code": 302})
+        return extra
+        #return util.create_headers_response(302, extra_headers=extra)
 
     def register_player(self, join_number, name, common):
         """Creating GamePlayer object, registering it and returning it"""
+        print ("join_numbers", list(common.join_number.items()))
+        if join_number not in common.join_number: return None
         g = game.GamePlayer(common.join_number[join_number], common, name)
         common.pid_client[g.pid] = g
         g.game_master.add_player(g.pid, g)
@@ -277,14 +293,14 @@ class check_test_exist(XMLService):
     def __init__(self, quiz_name, base_directory):
         """Initialization"""
         super(check_test_exist, self).__init__()
-        self._quiz_name = quiz_name[0]
+        self._quiz_name = quiz_name
         self._base_directory = base_directory
 
     def content(self):
         """The content of the service"""
         return util.boolean_to_xml(
             os.path.isfile(
-                os.path.normpath("%s\Quizes\%s.xml" %
+                os.path.normpath("%s/Quizes/%s.xml" %
                                  (self._base_directory,
                                   os.path.normpath(self._quiz_name))
                                  )
@@ -300,8 +316,11 @@ class new(Service):
 
     def headers(self, extra):
         """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "/new.html"})
-        return util.create_headers_response(302, extra_headers=extra)
+        extra.update({"Location": "%s/new.html" % config.uriprefix})
+
+        extra.update({"Status-Code": 302})
+        return extra
+        #return util.create_headers_response(302, extra_headers=extra)
 
 
 class get_join_number(XMLService):
@@ -352,7 +371,7 @@ class set_timer_change(Service):
     def __init__(self, game, new_time):
         """Initialization"""
         super(set_timer_change, self).__init__()
-        game.set_time_change(int(new_time[0]))
+        game.set_time_change(int(new_time))
 
 
 class check_timer_change(XMLService):
@@ -412,6 +431,12 @@ class check_move_next_page(XMLService):
         """Initialization"""
         super(check_move_next_page, self).__init__()
         self._game = game
+
+    def headers(self, extra):
+      if self._game is None:
+        extra.update({"Location": "%s/home.html" % config.uriprefix})
+        extra.update({"Status-Code": 302})
+      return extra
 
     def content(self):
         """The content of the service"""
@@ -578,3 +603,24 @@ class get_title(XMLService):
     def content(self):
         """The content of the service"""
         return self._game.get_title()
+
+class getquizes(XMLService):
+    """Return a list of available quizes"""
+
+    ## URI
+    NAME = "/getquizes"
+
+    def __init__(self, game):
+        """Initialization"""
+        super(getquizes, self).__init__()
+        self._game = game
+
+    def content(self):
+        """The content of the service"""
+        root = ElementTree.Element("Root")
+        quizes = glob.glob(os.path.join("Quizes", "*.xml"))
+        for fn in quizes:
+          path, f = os.path.split(fn)
+          name, ext = os.path.splitext(f)
+          ElementTree.SubElement(root, "quiz", {"name": name})
+        return util.to_string(root)

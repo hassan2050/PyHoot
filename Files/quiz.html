@@ -5,12 +5,12 @@
 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>PyHoot!</title>
-        <link rel="icon" type="image/png" href="icon.png">
+        <link rel="icon" type="image/png" href="/pyhoot/icon.png">
         <link href="https://fonts.googleapis.com/css?family=Ravi+Prakash" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="quiz.css">
-        <script src="util.js"></script>
-        <script src="quiz.js"></script>
-        <link rel="icon" type="image/png" href="icon.png">
+        <link rel="stylesheet" type="text/css" href="/pyhoot/quiz.css">
+        <script src="/pyhoot/util.js"></script>
+        <script src="/pyhoot/quiz.js"></script>
+        <link rel="icon" type="image/png" href="/pyhoot/icon.png">
     </head>
 
     <body onload="get_join_number();">
@@ -54,7 +54,7 @@
                 </table>
             </div>
             <div id="Answer">
-                <font size="7"><span>The right answer/s is/are:</span><br /></font>
+                <font size="7"><span id="anstext">The right answer/s is/are:</span><br /></font>
                 <font size="6"><span id="ans"></span></font>
             </div>
             <div id="Leaderboard">
@@ -75,7 +75,7 @@
                 <font size="7" id="Finish_score"></font>
                 <font size="6">points!</font>
                 <br/><br/>
-                <button type="button" class="Return_home" onclick="location.href='/';">
+                <button type="button" class="Return_home" onclick="location.href='/pyhoot/';">
 					Return to home page
 				</button>
             </div>

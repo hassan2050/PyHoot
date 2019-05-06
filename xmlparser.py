@@ -5,7 +5,7 @@
 import os.path
 from xml.etree import ElementTree
 
-from . import custom_exceptions, util
+import custom_exceptions, util
 
 
 class XMLParser(object):
@@ -13,9 +13,9 @@ class XMLParser(object):
 
     def __init__(self, file_name, base_directory):
         """initialization"""
-        test_file("%s.xml" % file_name, "%s\Quizes" % base_directory)
+        test_file("%s.xml" % file_name, os.path.join(base_directory, "Quizes"))
         self._root = ElementTree.parse(
-            "%s\Quizes\%s.xml" % (base_directory, file_name)).getroot()
+            os.path.join(base_directory, "Quizes", "%s.xml" % file_name)).getroot()
 
         ## The number of the questions, start at 0
         self.question_number = 0
@@ -27,7 +27,7 @@ class XMLParser(object):
     def get_backuproot(self):
         """Returning a copy of root as ElementTree.Element object"""
         return ElementTree.parse(
-            "%s\Quizes\%s.xml" % (self._base_directory, self.file_name)
+            os.path.join(self._base_directory, "Quizes", "%s.xml" % self.file_name)
         ).getroot()
 
     def get_question_number(self):
@@ -117,7 +117,7 @@ def test_file(filename, base="."):
             raise custom_exceptions.CorruptXML(
                 "Problem with the text of one of the questions")
         answers = q.findall("./Answer")
-        if len(answers) != 4:
+        if len(answers) < 2 or len(answers) > 4:
             raise custom_exceptions.CorruptXML(
                 "One of the questions too much \ not enough answers")
         correct = 0

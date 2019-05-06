@@ -24,4 +24,31 @@ function check_test_exist() {
 	);
 }
 
+QUIZES_IN_LINE = 4;
+
+/**
+ * Get the names of all the players and print it to the screen
+ */
+function getquizes() {
+	xmlrequest("getquizes", function() {
+		if (this.readyState == 4) {
+			if (this.status == 200) {
+				xmlDoc = parse_xml_from_string(this.responseText);
+				quizes = xmlDoc.getElementsByTagName("quiz");
+				string_quizes = "";
+				for (var i = 0; i < quizes.length; i++) {
+					string_quizes += "<span class=quiz>" + quizes[i].getAttribute("name") + "</span>";
+					if ((i+1) % QUIZES_IN_LINE == 0 && i != 0) {
+						string_quizes += "<br/>";
+					} else if ((i + 1) < quizes.length) {
+						string_quizes += "&emsp;";
+					}
+				}
+				document.getElementById("quizes").innerHTML = string_quizes;
+			}
+		}
+	});
+}
+
+
 /** @} */

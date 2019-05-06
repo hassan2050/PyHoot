@@ -9,7 +9,7 @@ import random
 import time
 from xml.etree import ElementTree
 
-from . import constants, xmlparser
+import constants, xmlparser
 
 # Registration -> Opening -> Question -> Answer -> Leaderboard -> Question
 # (number_of_questions > -1) -> Finish
@@ -22,7 +22,7 @@ class Game(object):
         """initialization"""
         super(Game, self).__init__()
         while True:
-            pid = base64.b64encode(os.urandom(constants.LENGTH_COOKIE))
+            pid = base64.b64encode(os.urandom(constants.LENGTH_COOKIE)).decode('utf-8')
             if pid not in common.pid_client.keys():
                 break
         """the pid, mostly the cookie"""
@@ -155,7 +155,7 @@ class GameMaster(Game):
                         "score": str(score)
                     }
                 )
-        return ElementTree.tostring(root, encoding=constants.ENCODING)
+        return ElementTree.tostring(root, encoding=constants.ENCODING).decode("utf-8")
 
     def get_place(self, pid):
         """Return the place of the player"""
@@ -204,7 +204,7 @@ class GameMaster(Game):
         return self._parser.get_question_answers()
 
     def _get_picture(self):
-        """Get the name of the picture file in the qustion
+        """Get the name of the picture file in the question
         @return Picture name (string) if available, else return None"""
         question = ElementTree.fromstring(
             self.get_question).find("./Text").text
@@ -265,7 +265,7 @@ class GamePlayer(Game):
 
     @game_master.setter
     def game_master(self, new):
-        """Settter for property game_master"""
+        """Setter for property game_master"""
         self._game_master = new
 
     @property
@@ -289,5 +289,5 @@ class GamePlayer(Game):
 
     @time.setter
     def time(self, new_time):
-        """Settter for property answer"""
+        """Setter for property answer"""
         self._time = new_time

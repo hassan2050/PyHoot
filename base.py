@@ -18,7 +18,7 @@ class Base(object):
         return self._logger
 
     def __init__(self):
-        """Contructor."""
+        """Constructor."""
         self._logger = logging.getLogger(
             '%s.%s' % (
                 self.LOG_PREFIX,
@@ -37,15 +37,17 @@ def setup_logging(stream=None, level=logging.INFO):
 
     try:
         h = logging.StreamHandler(stream)
-        h.setLevel(logging.DEBUG)
+        #h.setLevel(logging.DEBUG)
+        h.setLevel(level)
         h.setFormatter(
             logging.Formatter(
                 fmt=(
-                    '%(asctime)-15s '
-                    '[%(levelname)-7s] '
+                    '%(asctime)-14s '
+                    '[%(levelname)-5s] '
                     '%(name)s::%(funcName)s:%(lineno)d '
                     '%(message)s'
                 ),
+                datefmt="%m/%d %H:%M:%S",
             ),
         )
         logger.addHandler(h)

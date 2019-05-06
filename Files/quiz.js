@@ -142,6 +142,10 @@ function change_Question_Answer() {
 				answer_html = document.getElementById("ans");
 				answer_html.innerHTML = "";
 				list_answers = xmlDoc.getElementsByTagName("answer");
+				if(list_answers.length == 1) {
+				  document.getElementById("anstext").innerHTML = "The right answer is:";
+				} else {
+				  document.getElementById("anstext").innerHTML = "The right answers are:";				}
 				for (var i = 0; i < list_answers.length; i++) {
 					answer_html.innerHTML += document.getElementById(list_answers[i].getAttribute("answer") + "_answer").innerHTML + "<br />";
 				}
@@ -320,8 +324,14 @@ function get_question() {
 					question.childNodes[1].textContent;
 				var questionsID = ["A_answer", "B_answer", "C_answer", "D_answer"];
 				for (i = 0; i < 4; i++) {
+				  let _answer = xmlDoc.getElementsByTagName("Answer")[i];
+				  console.log("_answer: " + _answer);
+				  if (_answer != null) {
 					document.getElementById(questionsID[i]).innerHTML =
-						xmlDoc.getElementsByTagName("Answer")[i].textContent;
+						_answer.textContent;
+				  } else {
+				    document.getElementById(questionsID[i]).innerHTML = "";
+				  }
 				}
 				state = "Question";
 				change_Opening_Question();

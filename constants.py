@@ -16,7 +16,6 @@ BASE_HTML = """<HTML>
 ## The buff size for each time
 BUFF_SIZE = 1024
 
-
 ## States for server
 ## CLOSE - We are closing this socket
 CLOSE = 0
@@ -39,6 +38,7 @@ ENCODING = 'utf-8'
 
 ## HTTP Version we are using
 HTTP_VERSION = "HTTP/1.1"
+HTTP_VERSIONS = ("HTTP/1.0", "HTTP/1.1")
 
 ## How many characters in cookie
 LENGTH_COOKIE = 16
@@ -47,10 +47,10 @@ LENGTH_COOKIE = 16
 MAX_HEADER_LENGTH = 4096
 
 ## Biggest joinnumber
-MAX_PID = 999999
+MAX_PID = 9999
 
 ## Smallest join number
-MIN_PID = 100000
+MIN_PID = 1000
 
 
 ## Types of games
