@@ -7,9 +7,92 @@
 
 var PLAYERS_IN_LINE = 3;
 var state = "Registration";
-timer = window.setInterval(getnames, 1000);
+//timer = window.setInterval(getnames, 1000);
 var number_of_questions = null;
 
+var ws = new WebSocket("ws://" + location.host + "/pyhoot/websocket/");
+
+ws.onopen = function() {
+  console.log("onopen");
+
+  pkt = {"action":"connectQuiz"};
+  ws.send(JSON.stringify(pkt));
+};
+
+ws.onmessage = function (evt) {
+  console.log("ws.onmessage = " + evt.data);
+  var pkt = JSON.parse(evt.data);
+
+  console.log("action = " + pkt.action);
+
+  if(pkt.action == "updatePlayers") {
+    updatePlayers(pkt);
+  } else if(pkt.action == "opening") {
+    $("#quiz_name").html(pkt.info.name);
+    $("#number_questions").html(pkt.info.number_of_questions + " questions");
+    
+    switchState("Opening", "#0D407F");
+  } else if(pkt.action == "question") {
+    $("#question_title").html(pkt.question.text);
+    var questionsID = ["A_answer", "B_answer", "C_answer", "D_answer"];
+    for (i = 0; i < 4; i++) {
+      let _answer = pkt.question.answers[i];
+
+      if (_answer != null) {
+	$("#"+questionsID[i]).html(_answer.text);
+	$("#"+questionsID[i]).show();
+      } else {
+	$("#"+questionsID[i]).html("");
+	$("#"+questionsID[i]).hide();
+      }
+    }
+    switchState("Question", "#FFFFFF");
+  } else if(pkt.action == "answer") {
+    answer_html = document.getElementById("ans");
+    answer_html.innerHTML = "";
+    list_answers = pkt.answers;
+    if(list_answers.length == 1) {
+      $("#anstext").html("The right answer is:");
+    } else {
+      $("#anstext").html("The right answers are:");
+    }
+    for (var i = 0; i < list_answers.length; i++) {
+      answer_html.innerHTML += $("#"+list_answers[i] + "_answer").html() + "<br />";
+    }
+    switchState("Answer", "#EE3823");
+  } else if(pkt.action == "leaderboard") {
+    leaderboard = document.getElementById("Leaderboard");
+    //TODO: Move as much as I can into the HTML page
+    var list_players = pkt.leaderboard.players
+    var lb = "<table>";
+    for (i = 0; i < list_players.length; i++) {
+      player = list_players[i];
+      lb += "<tr>" +
+	"   <td>" +
+	player.name +
+	"   </td>" +
+	"   <td>" +
+	player.score +
+	"   </td>" +
+	"</tr>";
+    }
+    lb += "</table>";
+    $("#Leaderboard_content").html(lb);
+    switchState("Leaderboard", "Orange");
+  } else if(pkt.action == "finish") {
+    get_winner();
+    switchState("Finish", "#96A5A9");
+  }
+
+};
+
+function switchState(newstate, color) {
+  console.log("switchState " + state + " to " + newstate);
+    document.getElementById(state).style.display = "";
+    state = newstate;
+    document.getElementById(state).style.display = "inline";
+    document.body.style.background = color;
+}
 
 /**
  * switch screens for the next screen
@@ -56,39 +139,54 @@ function switch_screens() {
  * Get the join number and print it to the screen
  */
 function get_join_number() {
-	xmlrequest(
-		"get_join_number",
-		function() {
-			if (this.readyState == 4 && this.status == 200) {
-				xmlDoc = parse_xml_from_string(this.responseText);
-				document.getElementById("join_number").innerHTML = xmlDoc.getElementsByTagName("join_number")[0].textContent;
-			}
-		}
-	);
+  xmlrequest("get_join_number",
+	     function() {
+	       if (this.readyState == 4 && this.status == 200) {
+		 var pkt = JSON.parse(this.responseText);
+		 
+		 document.getElementById("join_number").innerHTML = pkt.join_number;
+	       }
+	     }
+	     );
 }
 
 /**
  * Get the names of all the players and print it to the screen
  */
 function getnames() {
-	xmlrequest("getnames", function() {
-		if (this.readyState == 4) {
-			if (this.status == 200) {
-				xmlDoc = parse_xml_from_string(this.responseText);
-				players = xmlDoc.getElementsByTagName("player");
-				string_players = "";
-				for (i = 0; i < players.length; i++) {
-					string_players += players[i].getAttribute("name");
-					if (i % PLAYERS_IN_LINE === 0 && i !== 0) {
-						string_players += "<br/>";
-					} else if ((i + 1) < players.length) {
-						string_players += "&emsp;";
-					}
-				}
-				document.getElementById("names").innerHTML = string_players;
-			}
-		}
+  xmlrequest("getnames", function() {
+	       if (this.readyState == 4) {
+		 if (this.status == 200) {
+		   var pkt = JSON.parse(this.responseText);
+		   players = pkt.players;
+		   string_players = "";
+		   for (i = 0; i < players.length; i++) {
+		     string_players += players[i];
+		     if (i % PLAYERS_IN_LINE === 0 && i !== 0) {
+		       string_players += "<br/>";
+		     } else if ((i + 1) < players.length) {
+		       string_players += "&emsp;";
+		     }
+		   }
+		   document.getElementById("names").innerHTML = string_players;
+		 }
+	       }
 	});
+}
+
+function updatePlayers(pkt) {
+  console.log("updatePlayers");
+  string_players = "";
+  players = pkt.players;
+  for (i = 0; i < players.length; i++) {
+    string_players += players[i];
+    if (i % PLAYERS_IN_LINE === 0 && i !== 0) {
+      string_players += "<br/>";
+    } else if ((i + 1) < players.length) {
+      string_players += "&emsp;";
+    }
+  }
+  document.getElementById("names").innerHTML = string_players;
 }
 
 /**
@@ -104,13 +202,20 @@ function check_moveable() {
  * Switch from Registration screen to Opening screen
  */
 function change_Registeration_Opening() {
-	clearInterval(timer);
-	state = "Opening";
-	set_timer("5");
-	check_timer_change()
-	getinfo();
-	switch_screens();
+  //state = "Opening";
+
+	pkt = {"action":"startGame"};
+	ws.send(JSON.stringify(pkt));
+
+	if(0) {
+	  set_timer("5");
+	  check_timer_change();
+	  getinfo();
+	  switch_screens();
+	}
 }
+
+
 
 /**
  * Check if need to change from Question to part after it

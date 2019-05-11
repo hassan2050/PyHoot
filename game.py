@@ -7,13 +7,16 @@ import base64
 import os
 import random
 import time
-from xml.etree import ElementTree
+import logging
 
-import constants, xmlparser
+import json
+
+import constants
 
 # Registration -> Opening -> Question -> Answer -> Leaderboard -> Question
 # (number_of_questions > -1) -> Finish
 
+from bottle.ext.websocket import websocket
 
 class Game(object):
     """Base game object, for the pid"""
@@ -34,6 +37,9 @@ class Game(object):
         """Do you need to move to the next part"""
         self._move_to_next_page = False
 
+        self.state = None
+        self.websocket = None
+
     @property
     def pid(self):
         """The number of the object in the database"""
@@ -46,6 +52,8 @@ class Game(object):
     def order_move_to_next_page(self):
         """Ordering moving to the next part"""
         self._move_to_next_page = True
+
+        self.send({"action" : "move_to_next_page"})
 
     def moved_to_next_page(self):
         """Confirm that the user moved to the next part"""
@@ -62,6 +70,12 @@ class Game(object):
         except TypeError:
             return False
 
+    def send(self, pkt):
+      if self.websocket:
+        try:
+          self.websocket.send(json.dumps(pkt))
+        except websocket.exceptions.WebSocketError:
+          self.websocket = None
 
 class GameMaster(Game):
     """Game object for Mastser, controller of the sytstem"""
@@ -79,8 +93,8 @@ class GameMaster(Game):
         """list of the players"""
         self._players_list = {}  # {pid: {"player": GamePlayer, "_score":score}
 
-        """xmlparser object"""
-        self._parser = xmlparser.XMLParser(quiz_name, base_directory)
+        self.quiz = json.load(open(os.path.join("Quizes", quiz_name + ".json"), "r"))
+        self.questionNum = 0
 
         while True:
             join_number = random.randint(constants.MIN_PID, constants.MAX_PID)
@@ -96,6 +110,12 @@ class GameMaster(Game):
     def add_player(self, new_pid, game_player):
         """Adding new player for the master"""
         self._players_list[new_pid] = {"player": game_player, "_score": 0}
+        
+
+        if self.websocket:
+          cmd = {"action" : "updatePlayers"}
+          cmd["players"] = [player.name for player in self.get_player_dict().values()]
+          self.websocket.send(json.dumps(cmd))
 
     def remove_player(self, pid):
         """Removing player from the system"""
@@ -114,18 +134,21 @@ class GameMaster(Game):
 
     def get_current_question_title(self):
         """Return the title of the current question"""
-        return self._parser.get_current_question_title()
+        return self.quiz['questions'][self.questionNum]['text']
 
     def _update_score(self):
         """Updating the score of all the players"""
-        right_answers = self._parser.get_question_answers()
+        right_answers = self.get_correct_answers()
+        
+        logging.warn("right_answers %s" % right_answers)
         for pid in self._players_list:
             player = self._players_list[pid]["player"]
+            logging.warn("player %s answer %s" % (player.name, player.answer))
             if player.answer in right_answers:
                 self._players_list[pid]["_score"] += self._time - player.time
-            player.answer = None
+            player.clearAnswer()
 
-    def get_xml_leaderboard(self):
+    def get_leaderboard(self):
         """Return the leaderboard"""
         self._update_score()
         dic_name_score = {}
@@ -134,7 +157,6 @@ class GameMaster(Game):
                 {
                     self._players_list[pid]["player"].name:
                     self._players_list[pid]["_score"]
-
                 }
             )
         dic_score_names = {}
@@ -144,18 +166,15 @@ class GameMaster(Game):
                 dic_score_names[score].append(name)
             else:
                 dic_score_names[score] = [name]
-        root = ElementTree.Element("Root")
+
+        players = []
+        root = {"players":players}
         score_sorted = sorted(dic_score_names, reverse=True)
         for i in range(min(5, len(dic_score_names))):
             score = score_sorted[i]
             for player in dic_score_names[score]:
-                ElementTree.SubElement(
-                    root, "Player", {
-                        "name": player,
-                        "score": str(score)
-                    }
-                )
-        return ElementTree.tostring(root, encoding=constants.ENCODING).decode("utf-8")
+              players.append({"name":player, "score":score})
+        return root
 
     def get_place(self, pid):
         """Return the place of the player"""
@@ -168,25 +187,28 @@ class GameMaster(Game):
 
     def get_question(self):
         """Return the question and it's answers"""
-        return self._parser.get_xml_question()
+        return self.quiz['questions'][self.questionNum]
 
     def get_information(self):
         """Return the information about the question: It's name and how many
          questions"""
-        return self._parser.get_information()
+        q = self.quiz.copy()
+        del q['questions']
+        return q
+          
 
     def move_to_next_question(self):
         """Moving to the next question.
         """
-        self._parser.move_to_next_question()
+        self.questionNum += 1
 
     def get_left_questions(self):
         """Return how many questions left - 1"""
-        return self._parser.get_left_questions()
+        return len(self.quiz['questions'])-self.questionNum
 
     def start_question(self):
         """Start the question"""
-        self._time = self._parser.get_duration_question() * 100 + int(
+        self._time = self.get_question()['duration'] * 100 + int(
             time.time() * 100)
 
     def check_all_players_answered(self):
@@ -201,7 +223,15 @@ class GameMaster(Game):
 
     def get_answers(self):
         """Return the right answers as A,B,C,D"""
-        return self._parser.get_question_answers()
+        return self.quiz['questions'][self.questionNum]['answers']
+
+    def get_correct_answers(self):
+        right_answer = []
+        answers = self.quiz['questions'][self.questionNum]['answers']
+        for ans in answers:
+          if "correct" in ans and ans["correct"] in ("1", True, 1):
+            right_answer.append(["A", "B", "C", "D"][answers.index(ans)])
+        return right_answer
 
     def _get_picture(self):
         """Get the name of the picture file in the question
@@ -279,9 +309,14 @@ class GamePlayer(Game):
         if answer in ["A", "B", "C", "D"] or answer is None:
             self._answer = answer
             self._time = int(time.time() * 100)
+            logging.warn("answer %s: %s" % (answer, self._time))
         else:
             raise Exception("Answer not allowd")
 
+    def clearAnswer(self):
+      self._answer = None
+      self._time = int(time.time() * 100)
+      
     @property
     def time(self):
         """property time, when the player answered"""

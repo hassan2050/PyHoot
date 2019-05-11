@@ -3,7 +3,7 @@ button, input, body {
 }
 
 body {
-    background: #5A005A; /*Xereus Purple*/
+    background: #d8daff; /*Xereus Purple*/
 }
 
 img {
@@ -47,6 +47,43 @@ div {
     background-color: #00401F; /*Caliban Green*/
 }
 
+.answer_A, .answer_B, .answer_C, .answer_D {
+    border-radius: 0.5em;
+    color: White;
+    font-size: 3em;
+    min-width: 1.5em;
+    text-align: center;
+}
+
+.answer_A, .answer_C {
+    float: left;
+}
+
+.answer_B, .answer_D {
+    float: right;
+}
+
+.answer_A {
+    background-color: #991115;
+    /*Mephiston Red*/
+}
+
+.answer_B {
+    background-color: #0D407F;
+    /*Macraage Blue*/
+}
+
+.answer_C {
+    background-color: #FFDA00;
+    /*Yriel Yellow*/
+}
+
+.answer_D {
+    background-color: #00401E;
+    /*Caliban Green*/
+}
+
+
 .leave {
     font-size: 120%;
     height: 3em;
@@ -54,7 +91,7 @@ div {
 }
 
 p {
-    color: white;
+    color: #000000;;
 }
 
 .leaderboard {

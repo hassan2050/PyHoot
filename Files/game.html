@@ -3,6 +3,8 @@
 
 	<head>
 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>PyHoot!</title>
 		<link rel="icon" type="image/png" href="/pyhoot/icon.png">
@@ -16,39 +18,34 @@
 	<body>
 		<center>
 			<div id="wait" style="display:inline">
-				<!--Will check when it should switch to question everysecond-->
+				<h2><span>Please wait</span></h2>
+				<button type="button" onclick="disconnect_user();">Disconnect</button>
+			</div>
+			<div id="wait_question">
 				<h2><span>Please wait</span></h2>
 				<button type="button" onclick="disconnect_user();">Disconnect</button>
 			</div>
 			<div id="question">
-				<div id="title" style="display:inline">
-				</div>
-				<table>
-					<tr>
-						<td>
-							<button type="button" class="button_A" onclick="send_answer('A');">
-								A
-							</button>
-						</td>
-						<td>
-							<button type="button" class="button_B" onclick="send_answer('B');">
-								B
-							</button>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<button type="button" class="button_C" onclick="send_answer('C');">
-								C
-							</button>
-						</td>
-						<td>
-							<button type="button" class="button_D" onclick="send_answer('D');">
-								D
-							</button>
-						</td>
-					</tr>
-				</table>
+	<div id="title" style="display:inline">
+	</div>
+	<table>
+	  <tr>
+	    <td class="answer_A" id="A_answer" onclick="send_answer('A');">
+		A
+	    </td>
+	    <td class="answer_B" id="B_answer" onclick="send_answer('B');">
+		B
+	    </td>
+	  </tr>
+	  <tr>
+	    <td class="answer_C" id="C_answer" onclick="send_answer('C');">
+		C
+	    </td>
+	    <td class="answer_D" id="D_answer" onclick="send_answer('D');">
+		D
+	    </td>
+	  </tr>
+	</table>
 			</div>
 			<div id="leaderboard">
 				<p class="leaderboard">Your score right now is </p>

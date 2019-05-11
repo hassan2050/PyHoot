@@ -9,8 +9,61 @@
 // The current state of the game
 var state = "wait";
 
+var ws = new WebSocket("ws://" + location.host + "/pyhoot/websocket/");
+
+ws.onopen = function() {
+  console.log("onopen");
+  ws.send('{"action":"connectPlayer"}');
+};
+
+ws.onmessage = function (evt) {
+  console.log("ws.onmessage = " + evt.data);
+  var pkt = JSON.parse(evt.data);
+
+  console.log("action = " + pkt.action);
+
+  if (pkt.action == "move_to_next_page") {
+    move_to_next_page();
+  }
+
+  if (pkt.action == "wait") {
+    switchState("wait", "#dafccc");
+  } else if(pkt.action == "question") {
+    $("#title").html(pkt.question.text);
+
+    var questionsID = ["A_answer", "B_answer", "C_answer", "D_answer"];
+    for (i = 0; i < 4; i++) {
+      let _answer = pkt.question.answers[i];
+
+      if (_answer != null) {
+	$("#"+questionsID[i]).html(_answer.text);
+	$("#"+questionsID[i]).show();
+      } else {
+	$("#"+questionsID[i]).html("");
+	$("#"+questionsID[i]).hide();
+      }
+    }
+
+    switchState("question", "#ccf6fc");
+  } else if(pkt.action == "wait_question") {
+    switchState("wait_question", "#cccefc");
+  } else if(pkt.action == "leaderboard") {
+    $("#score").html(pkt.score);
+    $("#place").html(ordinal_suffix_of(pkt.place));
+    switchState("leaderboard", "#ffccd7");
+  }
+};
+
+function switchState(newstate, color) {
+  console.log("switchState " + state + " to " + newstate);
+    document.getElementById(state).style.display = "";
+    state = newstate;
+    document.getElementById(state).style.display = "inline";
+    document.body.style.background = color;
+}
+
 //Checking every second if need to moved
-check_move_to_next();
+//check_move_to_next();
 
 /**
  * Disconnecting user from the system
@@ -33,20 +86,20 @@ function switch_screens() {
 	switch (state) {
 		case "question":
 			to = "wait";
-			color = "#00401F"; /*Caliban Green*/
+			color = "#dafccc";
 			break;
 		case "leaderboard":
 			to = "question";
-			color = "White";
+			color = "#ccf6fc";
 			break;
 		case "wait":
 			to = "question";
-			color = "White"
+			color = "#cccefc"
 			break;
 		case "wait_question":
 			state = "wait";
 			to = "leaderboard";
-			color = "#5A005A"; /*Xereus Purple*/
+			color = "#ffccd7";
 			break;
 	}
 	var from_style_display = document.getElementById(state).style.display;
@@ -66,8 +119,7 @@ function send_answer(letter) {
 	xmlrequest("answer?letter=" + letter,
 		function() {
 			if (this.readyState == 4 && this.status == 200) {
-				switch_screens();
-				state = "wait_question";
+			  switchState("wait_question", "#cccefc");
 			}
 		}
 	);
@@ -80,12 +132,12 @@ function send_answer(letter) {
 function get_score() {
 	xmlrequest("get_score",
 		function() {
-			if (this.readyState == 4 && this.status == 200) {
-				var score_place = parse_xml_from_string(this.responseText).getElementsByTagName("score_place")[0];
-				document.getElementById("score").innerHTML = score_place.getAttribute("score");
-				document.getElementById("place").innerHTML = ordinal_suffix_of(score_place.getAttribute("place"));
-			}
-		}
+		     if (this.readyState == 4 && this.status == 200) {
+		       var score_place = parse_xml_from_string(this.responseText).getElementsByTagName("score_place")[0];
+		       document.getElementById("score").innerHTML = score_place.getAttribute("score");
+		       document.getElementById("place").innerHTML = ordinal_suffix_of(score_place.getAttribute("place"));
+		     }
+		   }
 	);
 }
 
@@ -116,9 +168,9 @@ function ordinal_suffix_of(i) {
 function get_title() {
 	xmlrequest("get_title",
 		function() {
-			if (this.readyState == 4 && this.status == 200) {
-				document.getElementById("title").innerHTML =
-					parse_xml_from_string(this.responseText).getElementsByTagName("title")[0].textContent
+		     if (this.readyState == 4 && this.status == 200) {
+		       document.getElementById("title").innerHTML =
+			 parse_xml_from_string(this.responseText).getElementsByTagName("title")[0].textContent
 			}
 		}
 	)
@@ -128,44 +180,33 @@ function get_title() {
  * check if there is a need to move to the next part
  * @return nothing
  */
-function check_move_to_next() {
-	xmlrequest("check_move_next_page",
-		function() {
-			if (this.readyState == 4) {
-				if (this.status == 200) {
-					if (xmlstring_to_boolean(this.responseText)) {
-						switch (state) {
-							case "wait":
-								get_title()
-								switch_screens();
-								state = "question";
-								xmlrequest("moved_to_next_question", null);
-								break;
-							case "question":
-								switch_screens();
-								state = "leaderboard";
-								xmlrequest("moved_to_next_question", null);
-								break;
-							case "wait_question":
-								get_score();
-								switch_screens();
-								state = "leaderboard";
-								xmlrequest("moved_to_next_question", null);
-								break;
-							case "leaderboard":
-								get_title()
-								switch_screens();
-								xmlrequest("moved_to_next_question", null);
-								state = "question";
-								break;
-						}
-					}
-				}
-				setTimeout(check_move_to_next, 1000);
-			}
-		}
-	);
 
+function move_to_next_page() {
+ switch (state) {
+  case "wait":
+    get_title();
+    switch_screens();
+    state = "question";
+    xmlrequest("moved_to_next_question", null);
+    break;
+  case "question":
+    switch_screens();
+    state = "leaderboard";
+    xmlrequest("moved_to_next_question", null);
+    break;
+  case "wait_question":
+    get_score();
+    switch_screens();
+    state = "leaderboard";
+    xmlrequest("moved_to_next_question", null);
+    break;
+  case "leaderboard":
+    get_title()
+    switch_screens();
+    xmlrequest("moved_to_next_question", null);
+    state = "question";
+    break;
+  }
 }
 
 /** @} */

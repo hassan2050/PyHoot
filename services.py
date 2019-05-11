@@ -116,20 +116,6 @@ class register_quiz(Service):
         return m
 
 
-class homepage(Service):
-    """Redirect to home.html"""
-
-    ## URI
-    NAME = "/"  # This is the homepage
-
-    def headers(self, extra):
-        """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "%s/home.html" % config.uriprefix})
-        extra.update({"Status-Code": 302})
-        #return util.create_headers_response(302, extra_headers=extra)
-        return extra
-
-
 class answer(Service):
     """Return the Answer from ["A", "B", "C", "D"]
     GamePlayer"""
@@ -148,7 +134,7 @@ class getnames(XMLService):
     GamMaster"""
 
     ## URI
-    NAME = "/getnames"
+    NAME = "/getnames.old"
 
     def __init__(self, game, common):
         """Initialization"""
@@ -308,27 +294,12 @@ class check_test_exist(XMLService):
         )
 
 
-class new(Service):
-    """Send you to / new.html"""
-
-    ## URI
-    NAME = "/new"  # This is the homepage
-
-    def headers(self, extra):
-        """Headers of the service, base if for any HTTP page"""
-        extra.update({"Location": "%s/new.html" % config.uriprefix})
-
-        extra.update({"Status-Code": 302})
-        return extra
-        #return util.create_headers_response(302, extra_headers=extra)
-
-
 class get_join_number(XMLService):
     """Return the join number to the game
     GameMaster"""
 
     ## URI
-    NAME = "/get_join_number"
+    NAME = "/get_join_number2"
 
     def __init__(self, pid, common):
         """Initialization"""
@@ -617,10 +588,11 @@ class getquizes(XMLService):
 
     def content(self):
         """The content of the service"""
-        root = ElementTree.Element("Root")
-        quizes = glob.glob(os.path.join("Quizes", "*.xml"))
+        quizes = []
+        root =  {"quizes":quizes}
+        quizes = glob.glob(os.path.join("Quizes", "*.json"))
         for fn in quizes:
           path, f = os.path.split(fn)
           name, ext = os.path.splitext(f)
-          ElementTree.SubElement(root, "quiz", {"name": name})
-        return util.to_string(root)
+          quizes.append(name)
+        return json.dumps(root)
