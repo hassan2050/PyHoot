@@ -12,32 +12,36 @@
 		<script src="/pyhoot/home.js"></script>
 	</head>
 
-	<body>
-		<center>
-			<form id="join" action="/pyhoot/join" method="get">
-				<div id="p1">
-					<h1><span id="p1_title">Game PIN</span></h1><br />
-					<input type="number" inputmode="numeric" class="pin" pattern="\d*" title="Non-negative integral number" id="join_number" name="join_number" min="100000" max="999999" autocomplete="off" autofocus>
-					<br /><br /><br />
-					<button type="button" onclick="check('test');">
-						Join!</button>
-					<br /><br />
-					<button type="button" class="move" onclick="location.href='/pyhoot/new'">
-					Create new game </button>
-				</div>
-				<div id="p2" class="p2">
-					<h1>
-						<span id="p2_title">Choose name</span>
-					</h1>
-					<br />
-					<br />
-					<input type="text" name="name" class="name" autocomplete="off" autocorrect="off" id="name" pattern=".{3,}" required title="3 characters minimum"><br /><br />
-					<button type="button" onclick="check_length_name()">
-				     Start Playing!</button>
-				</div>
-			</form>
-
-		</center>
-	</body>
+  <body>
+    <center>
+      <form id="join" action="/pyhoot/join" method="get">
+	<div id="p1">
+	  <h1><span id="p1_title">Game PIN</span></h1>
+	  <br />
+	    <br/>
+	      <input type="number" inputmode="numeric" class="pin" pattern="\d*" title="Non-negative integral number" id="join_number" name="join_number" min="1000" max="999999" autocomplete="off" autofocus>
+		<br /><br />
+		      <button type="button" onclick="check('test');">
+			Join!</button>
+		      <br /><br />
+		      <br /><br />
+		      <br /><br />
+		      <br /><br />
+			  <button type="button" class="move" onclick="location.href='/pyhoot/new'">
+			    Create new game </button>
+	</div>
+	<div id="p2" class="p2">
+	  <h1>
+	    <span id="p2_title">Choose name</span>
+	  </h1>
+	  <br />
+	    <br />
+	      <input type="text" name="name" class="name" autocomplete="off" autocorrect="off" id="name" pattern=".{3,}" required title="3 characters minimum"><br /><br />
+		    <button type="button" onclick="check_length_name()">Start Playing!</button>
+	</div>
+      </form>
+      
+    </center>
+  </body>
 
 </html>

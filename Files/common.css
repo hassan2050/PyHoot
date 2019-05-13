@@ -1,15 +1,18 @@
 body {
-  /*  -moz-animation: random 20s infinite;
+    -moz-animation: random 20s infinite;
     -webkit-animation: random 20s infinite;
-    animation: random 20s infinite;*/
+    animation: random 20s infinite;
     background-color: #dc94fb;
     font-family: 'Arial';
 }
 
 span {
-    border-radius: 0.2em;
-    font-size: 2em;
-    text-align: center;
+  background-color: white;
+  padding: .2em;
+  border-radius: 0.7em;
+  font-size: 2em;
+  text-align: center;
+  
 }
 
 @keyframes random {

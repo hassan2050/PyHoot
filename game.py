@@ -16,7 +16,7 @@ import constants
 # Registration -> Opening -> Question -> Answer -> Leaderboard -> Question
 # (number_of_questions > -1) -> Finish
 
-from bottle.ext.websocket import websocket
+import geventwebsocket
 
 class Game(object):
     """Base game object, for the pid"""
@@ -74,7 +74,8 @@ class Game(object):
       if self.websocket:
         try:
           self.websocket.send(json.dumps(pkt))
-        except websocket.exceptions.WebSocketError:
+        except geventwebsocket.exceptions.WebSocketError:
+          logging.warn("websocket closed")
           self.websocket = None
 
     @property
@@ -128,7 +129,8 @@ class GameMaster(Game):
 
     def remove_player(self, pid):
         """Removing player from the system"""
-        self._players_list.pop(pid, None)
+        if pid in self._players_list:
+          del self._players_list[pid]
 
     def get_player_dict(self):
         """Return dictionary of all the players"""
@@ -334,3 +336,12 @@ class GamePlayer(Game):
       self._answer = None
       self._time = int(time.time() * 100)
       
+    def send(self, pkt):
+      if self.websocket:
+        try:
+          self.websocket.send(json.dumps(pkt))
+        except geventwebsocket.exceptions.WebSocketError:
+          logging.warn("websocket closed for %s" % (self.name))
+          self.game_master.remove_player(self.pid)
+          self.state = "done"
+          self.websocket = None

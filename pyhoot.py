@@ -15,6 +15,7 @@ from xml.etree import ElementTree
 if 1:
   from bottle.ext.websocket import GeventWebSocketServer
   from bottle.ext.websocket import websocket
+  import geventwebsocket
 
 import services
 import common
@@ -61,6 +62,7 @@ def check_test_exist():
 def getquizes():
   root =  {"quizes":[]}
   quizes = glob.glob(os.path.join(app._base_directory, "Quizes", "*.json"))
+  quizes.sort()
   for fn in quizes:
     path, f = os.path.split(fn)
     name, ext = os.path.splitext(f)
@@ -108,7 +110,11 @@ def handle_websocket(ws):
   _game.websocket = ws
 
   while True:
-    message = ws.receive()
+    try:
+      message = ws.receive()
+    except geventwebsocket.exceptions.WebSocketError:
+      break
+
     if message is None: break
     
     #logging.info("message %s" % message)
@@ -122,6 +128,7 @@ def handle_websocket(ws):
     elif msg['action'] == "connectPlayer":
       gameRuntime = GamePlayerThread(_game)
       gameRuntime.start()
+      
 
 class GameMasterThread(object):
   def __init__(self, game):
@@ -183,18 +190,22 @@ class GameMasterThread(object):
           player.send({"action" : "answer_countdown", "countdown":t})
           time.sleep(1)
 
-      leaderboard = self.game.get_leaderboard()
-      logging.debug("leaderboard state")
-      self.game.state = "leaderboard"
-      self.game.send({"action" : "leaderboard", "leaderboard":leaderboard})
-      for player in self.game.get_player_dict().values():
-        place = player.get_place()
-        player.send({"action" : "leaderboard", "score":player.score, "place":place})
-
-      for t in range(5, 0, -1):
+      if len(self.game.get_player_dict().values()) > 1:
+        leaderboard = self.game.get_leaderboard()
+        logging.debug("leaderboard state")
+        self.game.state = "leaderboard"
+        self.game.send({"action" : "leaderboard", "leaderboard":leaderboard})
         for player in self.game.get_player_dict().values():
-          player.send({"action" : "leaderboard_countdown", "countdown":t})
-          time.sleep(1)
+          place = player.get_place()
+          player.send({"action" : "leaderboard", "score":player.score, "place":place})
+
+        for t in range(5, 0, -1):
+          for player in self.game.get_player_dict().values():
+            player.send({"action" : "leaderboard_countdown", "countdown":t})
+            time.sleep(1)
+
+      if len(self.game.get_player_dict().values()) == 0:
+        break
 
       self.game.clearScores()
 
@@ -226,8 +237,11 @@ class GamePlayerThread(object):
     self.game.send({"action" : "wait"})
 
     while self.game.game_master.state != "finish":
-      message = self.game.websocket.receive()
-
+      try:
+        message = self.game.websocket.receive()
+      except geventwebsocket.exceptions.WebSocketError:
+        break
+    
       logging.info("message %s" % message)
 
       if message is None: break
