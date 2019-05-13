@@ -17,9 +17,12 @@
 	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
       </div>
       <div id="starting" style="display:None;">
+	<br /><br />
 	<span id="quiz_name" class="quiz_name"></span>
 	<br /><br />
 	<span size="4" id="number_questions" class="number_questions"></span>
+	<br /><br />
+	<br /><br />
 
 	<h1><span id="opening_countdown"></span></h1>
 
@@ -31,12 +34,18 @@
       </div>
 
       <div id="showAnswer" style="display:none;">
+	  <br/>
+	  <br/>
 	<h1><span id="correct"></span></h1>
+	  <br/>
 	<h1><span id="anstext">The right answer/s is/are:</span></h1><br/>
 	<div id="ans"></div>
-	<div>Score: <span id="score"></span> (+<span id="diff_score"></span>)</div>
+	  <br/>
+	  <br/>
+	  <br/>
+	<div><span>Score:</span> <span id="score"></span><span id="diff_score"></span></div>
 	
-	<div><span id="answer_countdown"></span></div>
+	<div><span class="countdown" id="answer_countdown"></span></div>
 	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
       </div>
 
@@ -60,7 +69,7 @@
 	    </td>
 	  </tr>
 	</table>
-	<div><span id="question_countdown"></span></div>
+	<div><span class="countdown" id="question_countdown"></span></div>
 	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
       </div>
       <div id="leaderboard"  style="display:none;">
@@ -71,7 +80,7 @@
 	  <span class="leaderboard" id="leaderboard_place"></span>
 	  place</p>
 
-	<div><span id="leaderboard_countdown"></span></div>
+	<div><span class="countdown" id="leaderboard_countdown"></span></div>
 
 	      <button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
       </div>

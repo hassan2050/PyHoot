@@ -268,12 +268,17 @@ def sendShowAnswer(game):
   if game.diff_score is None:
     game.diff_score = 0
     if correct:
+      game.correct += 1
       game.diff_score = game.game_master.time - game.time
       game.score += game.diff_score
+    else:
+      game.incorrect += 1
 
   game.send({"action":"showAnswer", 
              "answers":right_answers,
              "correct":correct,
+             "answers_correct": game.correct,
+             "answers_incorrect": game.incorrect,
              "diff_score":game.diff_score, 
              "score":game.score})
 

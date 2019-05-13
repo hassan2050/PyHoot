@@ -37,7 +37,19 @@ ws.onmessage = function (evt) {
       let _answer = pkt.question.answers[i];
 
       if (_answer != null) {
-	$("#"+questionsID[i]).html(_answer.text);
+	fontsize = 100;
+	alen = _answer.text.length;
+	if (alen > 0 && alen < 10) {
+	  fontsize = 120;
+	} else if (alen > 20 && alen < 40) {
+	  fontsize = 80;
+	} else if (alen > 40 && alen < 60) {
+	  fontsize = 60;
+	} else if (alen > 60 && alen < 80) {
+	  fontsize = 50;
+	}
+
+	$("#"+questionsID[i]).html('<font style="font-size: ' + fontsize + '%">' + _answer.text + '</font>');
 	$("#"+questionsID[i]).show();
       } else {
 	$("#"+questionsID[i]).html("");
@@ -62,7 +74,7 @@ ws.onmessage = function (evt) {
     leaderboard = document.getElementById("Leaderboard");
     //TODO: Move as much as I can into the HTML page
     var list_players = pkt.leaderboard.players
-    var lb = "<table>";
+    var lb = '<table id="Leaderboard_table">';
     for (i = 0; i < list_players.length; i++) {
       player = list_players[i];
       lb += "<tr>" +
@@ -78,7 +90,12 @@ ws.onmessage = function (evt) {
     $("#Leaderboard_content").html(lb);
     switchState("Leaderboard", "Orange");
   } else if(pkt.action == "finish") {
-    get_winner();
+    var oTable = document.getElementById("Leaderboard_table");
+
+    var oCells = oTable.rows.item(0).cells;
+
+    $("#Finish_name").html(oCells.item(0).innerHTML);
+    $("#Finish_score").html(oCells.item(1).innerHTML);
     switchState("Finish", "#96A5A9");
   }
 

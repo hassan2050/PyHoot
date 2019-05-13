@@ -57,7 +57,19 @@ ws.onmessage = function (evt) {
       let _answer = pkt.question.answers[i];
 
       if (_answer != null) {
-	$("#"+questionsID[i]).html(_answer.text);
+	fontsize = 100;
+	alen = _answer.text.length;
+	if (alen > 0 && alen < 10) {
+	  fontsize = 120;
+	} else if (alen > 20 && alen < 40) {
+	  fontsize = 80;
+	} else if (alen > 40 && alen < 60) {
+	  fontsize = 60;
+	} else if (alen > 60 && alen < 80) {
+	  fontsize = 50;
+	}
+
+	$("#"+questionsID[i]).html('<font style="font-size: ' + fontsize + '%">' + _answer.text + '</font>');
 	$("#"+questionsID[i]).show();
       } else {
 	$("#"+questionsID[i]).html("");
@@ -87,7 +99,7 @@ ws.onmessage = function (evt) {
     $("#ans").html(answer_html);
 
     $("#score").html(pkt.score);
-    $("#diff_score").html(pkt.diff_score);
+    $("#diff_score").html("(+" + pkt.diff_score +")");
 
     if (pkt.correct) {
       $("#correct").html("Correct");

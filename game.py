@@ -105,6 +105,10 @@ class GameMaster(Game):
         self._players_list = {}  # {pid: GamePlayer}
 
         self.quiz = json.load(open(os.path.join("Quizes", quiz_name + ".json"), "r"))
+
+        ## shuffle the questions
+        random.shuffle(self.quiz['questions'])
+        
         self.questionNum = 0
 
         while True:
@@ -267,7 +271,9 @@ class GamePlayer(Game):
         self._time = None
         self._score = 0
         self._diff_score = None
-
+        self._correct = 0
+        self._incorrect = 0
+        
     def get_place(self):
         """Return the place of the player"""
         return self._game_master.get_place(self._pid)
@@ -277,49 +283,44 @@ class GamePlayer(Game):
         return self._game_master.get_current_question_title()
 
     @property
-    def score(self):
-        """Property score, the score of the player"""
-        return self._score
+    def correct(self): return self._correct
+
+    @correct.setter
+    def correct(self, correct): self._correct = correct
+
+    @property
+    def incorrect(self): return self._incorrect
+
+    @incorrect.setter
+    def incorrect(self, incorrect): self._incorrect = incorrect
+
+
+    @property
+    def score(self): return self._score
 
     @score.setter
-    def score(self, score):
-        """Settter for property score"""
-        self._score = score
+    def score(self, score): self._score = score
 
     @property
-    def diff_score(self):
-        """Property score, the score of the player"""
-        return self._diff_score
+    def diff_score(self): return self._diff_score
 
     @diff_score.setter
-    def diff_score(self, diff_score):
-        """Settter for property score"""
-        self._diff_score = diff_score
+    def diff_score(self, diff_score): self._diff_score = diff_score
 
     @property
-    def name(self):
-        """Property name, the name of the player"""
-        return self._name
+    def name(self): return self._name
 
     @name.setter
-    def name(self, name):
-        """Settter for property name"""
-        self._name = name
+    def name(self, name): self._name = name
 
     @property
-    def game_master(self):
-        """Property game_master, the master of this player"""
-        return self._game_master
+    def game_master(self): return self._game_master
 
     @game_master.setter
-    def game_master(self, new):
-        """Setter for property game_master"""
-        self._game_master = new
+    def game_master(self, new): self._game_master = new
 
     @property
-    def answer(self):
-        """Property answer, the answer of this player"""
-        return self._answer
+    def answer(self): return self._answer
 
     @answer.setter
     def answer(self, answer):
