@@ -2,17 +2,13 @@
 <html>
 
     <head>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>PyHoot!</title>
-        <link rel="icon" type="image/png" href="/pyhoot/icon.png">
-        <link href="https://fonts.googleapis.com/css?family=Ravi+Prakash" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/pyhoot/quiz.css">
-
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/png" href="/pyhoot/icon.png" />
+        <link rel="stylesheet" type="text/css" href="/pyhoot/quiz.css" />
         <script src="/pyhoot/util.js"></script>
         <script src="/pyhoot/quiz.js"></script>
-        <link rel="icon" type="image/png" href="/pyhoot/icon.png">
     </head>
 
     <body onload="get_join_number();">
@@ -21,45 +17,42 @@
                 <h1><span>Now you can join the Game!</span><br /></h1>
                 <h2><span id="join_number"></span></h2>
                 <br /><br />
-                <span id="br1">Connected players</span>
+                <span id="br1" style="display:none"></span>
                 <br/><br/>
-                <span id="names">
-                </span>
-                <br/><br /><br/><br/>
+                <span id="names" style="display:none"></span>
+                <br/><br/><br/><br/>
                 <button type="button" id="Start_playing" class="button_start" onclick="check_moveable()">
-                    Start playing
+                    Start Playing
+                </button>
+
+                <button type="button" id="Start_Solo" class="button_start" onclick="check_moveable()">
+                    Start Solo
                 </button>
             </div>
-            <div id="Opening">
-                <span id="quiz_name" class="quiz_name">
-                </span>
+            <div id="Opening" style="display: none">
+                <span id="quiz_name" class="quiz_name"></span>
                 <br /><br />
-                <span size="4" id="number_questions" class="number_questions">
-                </span>
+                <span size="4" id="number_questions" class="number_questions"></span>
             </div>
-            <div id="Question">
-                <p id="question_title">
-                </p>
+            <div id="Question" style="display: none">
+                <h1><p id="question_title"></p></h1>
+
                 <table>
                     <tr>
-                        <td id="A_answer" class="answer_A">
-                        </td>
-                        <td id="B_answer" class="answer_B">
-                        </td>
+                        <td id="A_answer" class="answer_A"></td>
+                        <td id="B_answer" class="answer_B"></td>
                     </tr>
                     <tr>
-                        <td id="C_answer" class="answer_C">
-                        </td>
-                        <td id="D_answer" class="answer_D">
-                        </td>
+                        <td id="C_answer" class="answer_C"></td>
+                        <td id="D_answer" class="answer_D"></td>
                     </tr>
                 </table>
             </div>
-            <div id="Answer">
-                <font size="7"><span id="anstext">The right answer/s is/are:</span><br /></font>
-                <font size="6"><span id="ans"></span></font>
+            <div id="Answer" style="display: none">
+                <h1><span id="anstext">The right answer/s is/are:</span></h1><br/>
+                <div id="ans"></div>
             </div>
-            <div id="Leaderboard">
+            <div id="Leaderboard" style="display: none">
                 <h1><span>Top players</span></h1><br />
                 <table>
                     <tr>
@@ -71,15 +64,13 @@
                 </div>
             </div>
             <div id="Finish" style="display:none">
-                <font size="7">And this winner is... <br /></font>
+                <h1><span>And the winner is... </span></h1>
                 <font size="7" id="Finish_name"></font>
                 <font size="6"><br />with </font>
                 <font size="7" id="Finish_score"></font>
                 <font size="6">points!</font>
                 <br/><br/>
-                <button type="button" class="Return_home" onclick="location.href='/pyhoot/';">
-					Return to home page
-				</button>
+                <button type="button" class="Return_home" onclick="location.href='/pyhoot/';">Return to home page</button>
             </div>
         </center>
 

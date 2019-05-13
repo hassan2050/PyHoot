@@ -10,15 +10,15 @@
  * @return Nothing
  */
 function xmlrequest(url, state_change) {
-	var xhttp = new XMLHttpRequest();
-	if (state_change !== null) {
-		xhttp.onreadystatechange = state_change;
-	}
-	xhttp.onerror = function() {
-		xmlrequest(url, state_change);
-	}
-	xhttp.open("GET", url, true);
-	xhttp.send();
+  var xhttp = new XMLHttpRequest();
+  if (state_change !== null) {
+    xhttp.onreadystatechange = state_change;
+  }
+  xhttp.onerror = function() {
+    xmlrequest(url, state_change);
+  }
+  xhttp.open("GET", url, true);
+  xhttp.send();
 }
 
 /**

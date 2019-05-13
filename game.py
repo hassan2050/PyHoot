@@ -77,6 +77,16 @@ class Game(object):
         except websocket.exceptions.WebSocketError:
           self.websocket = None
 
+    @property
+    def time(self):
+        """property time, when the player answered or when the question started"""
+        return self._time
+
+    @time.setter
+    def time(self, new_time):
+        """Setter for property answer"""
+        self._time = new_time
+
 class GameMaster(Game):
     """Game object for Mastser, controller of the sytstem"""
 
@@ -91,7 +101,7 @@ class GameMaster(Game):
         self._quiz = quiz_name
 
         """list of the players"""
-        self._players_list = {}  # {pid: {"player": GamePlayer, "_score":score}
+        self._players_list = {}  # {pid: GamePlayer}
 
         self.quiz = json.load(open(os.path.join("Quizes", quiz_name + ".json"), "r"))
         self.questionNum = 0
@@ -109,12 +119,11 @@ class GameMaster(Game):
 
     def add_player(self, new_pid, game_player):
         """Adding new player for the master"""
-        self._players_list[new_pid] = {"player": game_player, "_score": 0}
+        self._players_list[new_pid] = game_player
         
-
         if self.websocket:
           cmd = {"action" : "updatePlayers"}
-          cmd["players"] = [player.name for player in self.get_player_dict().values()]
+          cmd["players"] = [player.name for player in self._players_list.values()]
           self.websocket.send(json.dumps(cmd))
 
     def remove_player(self, pid):
@@ -123,42 +132,28 @@ class GameMaster(Game):
 
     def get_player_dict(self):
         """Return dictionary of all the players"""
-        dict = {}
-        for key in self._players_list:
-            dict[key] = self._players_list[key]["player"]
-        return dict
+        return self._players_list.copy()
 
     def get_score(self, pid):
         """Returning the score of specific player"""
-        return self._players_list[pid]["_score"]
+        return self._players_list[pid].score
 
     def get_current_question_title(self):
         """Return the title of the current question"""
         return self.quiz['questions'][self.questionNum]['text']
 
-    def _update_score(self):
+    def clearScores(self):
         """Updating the score of all the players"""
-        right_answers = self.get_correct_answers()
         
-        logging.warn("right_answers %s" % right_answers)
-        for pid in self._players_list:
-            player = self._players_list[pid]["player"]
-            logging.warn("player %s answer %s" % (player.name, player.answer))
-            if player.answer in right_answers:
-                self._players_list[pid]["_score"] += self._time - player.time
-            player.clearAnswer()
+        for pid, player in self._players_list.items():
+          player.clearAnswer()
 
     def get_leaderboard(self):
         """Return the leaderboard"""
-        self._update_score()
         dic_name_score = {}
-        for pid in self._players_list:
-            dic_name_score.update(
-                {
-                    self._players_list[pid]["player"].name:
-                    self._players_list[pid]["_score"]
-                }
-            )
+        for pid, player in self._players_list.items():
+          dic_name_score[player.name] = player.score
+
         dic_score_names = {}
         for name in dic_name_score:
             score = dic_name_score[name]
@@ -179,20 +174,24 @@ class GameMaster(Game):
     def get_place(self, pid):
         """Return the place of the player"""
         scores_by_place = []
-        for p in self._players_list:
-            scores_by_place.append(self._players_list[p]["_score"])
+        for p, player in self._players_list.items():
+            scores_by_place.append(player.score)
         # Remove doubles and sort
         return sorted(list(set(scores_by_place)), reverse=True).index(
-            self._players_list[pid]["_score"]) + 1
+            self._players_list[pid].score) + 1
 
     def get_question(self):
         """Return the question and it's answers"""
-        return self.quiz['questions'][self.questionNum]
+        try:
+          return self.quiz['questions'][self.questionNum]
+        except IndexError:
+          return None
 
     def get_information(self):
         """Return the information about the question: It's name and how many
          questions"""
         q = self.quiz.copy()
+        q['number_of_questions'] = len(self.quiz['questions'])
         del q['questions']
         return q
           
@@ -214,11 +213,10 @@ class GameMaster(Game):
     def check_all_players_answered(self):
         """Check if all the players answered"""
         ans = True
-        for p in self._players_list.values():
-            p = p["player"]
-            if p._answer not in ["A", "B", "C", "D"]:
-                ans = False
-                break
+        for player in self._players_list.values():
+          if player._answer not in ["A", "B", "C", "D"]:
+            ans = False
+            break
         return ans
 
     def get_answers(self):
@@ -265,10 +263,8 @@ class GamePlayer(Game):
         self._game_master = master  # Game object GameMaster
         self._answer = None
         self._time = None
-
-    def get_score(self):
-        """Return the score of the player"""
-        return self._game_master.get_score(self._pid)
+        self._score = 0
+        self._diff_score = None
 
     def get_place(self):
         """Return the place of the player"""
@@ -277,6 +273,26 @@ class GamePlayer(Game):
     def get_title(self):
         """Return the title of the question"""
         return self._game_master.get_current_question_title()
+
+    @property
+    def score(self):
+        """Property score, the score of the player"""
+        return self._score
+
+    @score.setter
+    def score(self, score):
+        """Settter for property score"""
+        self._score = score
+
+    @property
+    def diff_score(self):
+        """Property score, the score of the player"""
+        return self._diff_score
+
+    @diff_score.setter
+    def diff_score(self, diff_score):
+        """Settter for property score"""
+        self._diff_score = diff_score
 
     @property
     def name(self):
@@ -314,15 +330,7 @@ class GamePlayer(Game):
             raise Exception("Answer not allowd")
 
     def clearAnswer(self):
+      self._diff_score = None
       self._answer = None
       self._time = int(time.time() * 100)
       
-    @property
-    def time(self):
-        """property time, when the player answered"""
-        return self._time
-
-    @time.setter
-    def time(self, new_time):
-        """Setter for property answer"""
-        self._time = new_time

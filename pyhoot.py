@@ -12,7 +12,6 @@ import glob
 
 from xml.etree import ElementTree
 
-
 if 1:
   from bottle.ext.websocket import GeventWebSocketServer
   from bottle.ext.websocket import websocket
@@ -52,7 +51,7 @@ def check_test_exist():
   quiz_name = request.query.get('quiz_name')
   
   ret = os.path.isfile(
-    os.path.normpath("%s/Quizes/%s.xml" % (app._base_directory, os.path.normpath(quiz_name))))
+    os.path.normpath(os.path.join((app._base_directory, "Quizes", os.path.normpath(quiz_name)+".json"))))
   root = {}
   root['ret'] = ret
   return json.dumps(root)
@@ -73,14 +72,14 @@ def getquizes():
 @app.route(config.uriprefix + '/get_join_number')
 def get_join_number():
   pid = request.cookies.get("pid")
-  if pid not in app.common.pid_client: return
+  if pid not in app.common.pid_client: abort(400, 'Invalid PID')
 
   return json.dumps({"join_number": app.common.pid_client[pid].join_number})
 
 @app.route(config.uriprefix + '/getnames')
 def getnames():
   pid = request.cookies.get("pid")
-  if pid not in app.common.pid_client: return
+  if pid not in app.common.pid_client: abort(400, 'Invalid PID')
   _game = app.common.pid_client[pid]
 
   players = []
@@ -95,10 +94,16 @@ def getnames():
 @app.get(config.uriprefix + '/websocket/', apply=[websocket])
 def handle_websocket(ws):
   if not ws:
+    logging.warn("websocket: Invalid websocket")
     abort(400, 'Expected WebSocket request.')
 
   pid = request.cookies.get("pid")
-  if pid not in app.common.pid_client: return
+  if pid not in app.common.pid_client: 
+    logging.warn("websocket: Invalid PID: %s" % pid)
+    ws.send(json.dumps({"action":"invalid_pid"}))
+    ws.close()
+    return
+
   _game = app.common.pid_client[pid]
   _game.websocket = ws
 
@@ -114,7 +119,7 @@ def handle_websocket(ws):
     if msg['action'] == "startGame":
       gameRuntime = GameMasterThread(_game)
       gameRuntime.start()
-    if msg['action'] == "connectPlayer":
+    elif msg['action'] == "connectPlayer":
       gameRuntime = GamePlayerThread(_game)
       gameRuntime.start()
 
@@ -132,43 +137,67 @@ class GameMasterThread(object):
     self.game.state = "opening"
     self.game.send({"action" : "opening", "info":info})
     for player in self.game.get_player_dict().values():
-      player.send({"action" : "wait"})
-    time.sleep(5)
+      player.send({"action" : "starting", "info":info})
+
+    for t in range(5, 0, -1):
+      for player in self.game.get_player_dict().values():
+        player.send({"action" : "opening_countdown", "countdown":t})
+        time.sleep(1)
+    player.send({"action" : "opening_countdown", "countdown":0})
+    time.sleep(1)
 
     while 1:
       question = self.game.get_question()
+      if not question: break
       self.game.start_question()
       logging.debug("question state")
       self.game.state = "question"
       self.game.send({"action" : "question", "question":question})
 
       for player in self.game.get_player_dict().values():
-        player.send({"action" : "question", "question": question})
+        player.send({"action" : "question", "question": question, "countdown":self.game.get_question()['duration']})
 
       endtime = time.time() + self.game.get_question()['duration']
+
       while 1:
         if self.game.check_all_players_answered(): break
         if time.time() >= endtime: break
         #logging.debug("timeleft: %d" % int(endtime - time.time()))
-        time.sleep(0.5)
+
+        t = int(endtime - time.time())
+        for player in self.game.get_player_dict().values():
+          player.send({"action" : "question_countdown", "countdown":t})
+
+        time.sleep(.5)
         
       answers = self.game.get_correct_answers()
       logging.debug("answer state: %s" % answers)
       self.game.state = "answer"
       self.game.send({"action" : "answer", "answers":answers})
       for player in self.game.get_player_dict().values():
-        player.send({"action" : "wait_question"})
-      time.sleep(5)
+        sendShowAnswer(player)
+        #player.send({"action" : "wait_question"})
+
+      for t in range(5, 0, -1):
+        for player in self.game.get_player_dict().values():
+          player.send({"action" : "answer_countdown", "countdown":t})
+          time.sleep(1)
 
       leaderboard = self.game.get_leaderboard()
       logging.debug("leaderboard state")
       self.game.state = "leaderboard"
       self.game.send({"action" : "leaderboard", "leaderboard":leaderboard})
       for player in self.game.get_player_dict().values():
-        score = player.get_score()
         place = player.get_place()
-        player.send({"action" : "leaderboard", "score":score, "place":place})
-      time.sleep(5)
+        player.send({"action" : "leaderboard", "score":player.score, "place":place})
+
+      for t in range(5, 0, -1):
+        for player in self.game.get_player_dict().values():
+          player.send({"action" : "leaderboard_countdown", "countdown":t})
+          time.sleep(1)
+
+      self.game.clearScores()
+
       self.game.move_to_next_question()
 
       logging.debug("questions left: %s" % self.game.get_left_questions())
@@ -179,9 +208,7 @@ class GameMasterThread(object):
     self.game.state = "finish"
     self.game.send({"action" : "finish"})
     for player in self.game.get_player_dict().values():
-      score = player.get_score()
-      place = player.get_place()
-      player.send({"action" : "leaderboard", "score":score, "place":place})
+      player.send({"action" : "leaderboard", "score":player.score, "place":player.get_place()})
     time.sleep(1)
 
     for player in self.game.get_player_dict().values():
@@ -199,8 +226,43 @@ class GamePlayerThread(object):
     self.game.send({"action" : "wait"})
 
     while self.game.game_master.state != "finish":
+      message = self.game.websocket.receive()
+
+      logging.info("message %s" % message)
+
+      if message is None: break
       if self.game.state == "done": break
-      time.sleep(1)
+
+      msg = json.loads(message)
+
+      if msg['action'] == "sumbitAnswer":
+        self.game.answer = msg['answer']
+        sendShowAnswer(self.game)
+        
+      elif msg['action'] == "disconnect":
+        self.game.state = "done"
+        break
+    self.game.state = "done"
+
+def sendShowAnswer(game):        
+  right_answers = game.game_master.get_correct_answers()
+  correct = False
+  if game.answer in right_answers:
+    correct = True
+
+  ## calculate new score
+  if game.diff_score is None:
+    game.diff_score = 0
+    if correct:
+      game.diff_score = game.game_master.time - game.time
+      game.score += game.diff_score
+
+  game.send({"action":"showAnswer", 
+             "answers":right_answers,
+             "correct":correct,
+             "diff_score":game.diff_score, 
+             "score":game.score})
+
     
 
 @app.route(config.uriprefix + '/<filepath:path>')

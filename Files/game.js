@@ -16,6 +16,11 @@ ws.onopen = function() {
   ws.send('{"action":"connectPlayer"}');
 };
 
+ws.onerror = function (evt) {
+  console.log("onerror: " + evt);
+  windows.location.href = "/pyhoot/";
+}
+
 ws.onmessage = function (evt) {
   console.log("ws.onmessage = " + evt.data);
   var pkt = JSON.parse(evt.data);
@@ -24,12 +29,28 @@ ws.onmessage = function (evt) {
 
   if (pkt.action == "move_to_next_page") {
     move_to_next_page();
-  }
-
-  if (pkt.action == "wait") {
+  } else if (pkt.action == "invalid_pid") {
+    window.location.href = "/pyhoot/";
+    return;
+  } else if (pkt.action == "wait") {
+    
     switchState("wait", "#dafccc");
+  } else if(pkt.action == "wait_question") {
+    switchState("wait_question", "#cccefc");
+  } else if(pkt.action == "starting") {
+    $("#quiz_name").html(pkt.info.name);
+    $("#number_questions").html(pkt.info.number_of_questions + " questions");
+    switchState("starting", "#cfcefc");
+  } else if(pkt.action == "opening_countdown") {
+    if(pkt.countdown > 1) {
+      $("#opening_countdown").html("Starting in " + pkt.countdown + " seconds.");
+    } else if(pkt.countdown == 0) {
+      $("#opening_countdown").html("Starting Now!");
+    } else {
+      $("#opening_countdown").html("Starting in " + pkt.countdown + " second.");
+    }
   } else if(pkt.action == "question") {
-    $("#title").html(pkt.question.text);
+    $("#question_title").html(pkt.question.text);
 
     var questionsID = ["A_answer", "B_answer", "C_answer", "D_answer"];
     for (i = 0; i < 4; i++) {
@@ -43,72 +64,64 @@ ws.onmessage = function (evt) {
 	$("#"+questionsID[i]).hide();
       }
     }
+    $("#question_countdown").html(pkt.countdown);
 
     switchState("question", "#ccf6fc");
-  } else if(pkt.action == "wait_question") {
-    switchState("wait_question", "#cccefc");
-  } else if(pkt.action == "leaderboard") {
+  } else if(pkt.action == "question_countdown") {
+    $("#question_countdown").html(pkt.countdown);
+  } else if(pkt.action == "answer_countdown") {
+    $("#answer_countdown").html(pkt.countdown);
+  } else if(pkt.action == "leaderboard_countdown") {
+    $("#leaderboard_countdown").html(pkt.countdown);
+  } else if(pkt.action == "showAnswer") {
+    answer_html = "";
+    list_answers = pkt.answers;
+    if(list_answers.length == 1) {
+      $("#anstext").html("The right answer is:");
+    } else {
+      $("#anstext").html("The right answers are:");
+    }
+    for (var i = 0; i < list_answers.length; i++) {
+      answer_html += "<span>"+$("#"+list_answers[i] + "_answer").html() + "</span>";
+    }
+    $("#ans").html(answer_html);
+
     $("#score").html(pkt.score);
-    $("#place").html(ordinal_suffix_of(pkt.place));
+    $("#diff_score").html(pkt.diff_score);
+
+    if (pkt.correct) {
+      $("#correct").html("Correct");
+    } else {
+      $("#correct").html("Incorrect");
+    }
+    
+    switchState("showAnswer", "#cccefc");
+  } else if(pkt.action == "leaderboard") {
+    $("#leaderboard_score").html(pkt.score);
+    $("#leaderboard_place").html(ordinal_suffix_of(pkt.place));
     switchState("leaderboard", "#ffccd7");
   }
 };
 
 function switchState(newstate, color) {
   console.log("switchState " + state + " to " + newstate);
-    document.getElementById(state).style.display = "";
-    state = newstate;
-    document.getElementById(state).style.display = "inline";
-    document.body.style.background = color;
+  $("#"+state).css("display", "none");
+  state = newstate;
+  $("#"+state).css("display", "inline");
+  document.body.style.background = color;
 }
-
-//Checking every second if need to moved
-//check_move_to_next();
 
 /**
  * Disconnecting user from the system
  * @return nothing
  */
 function disconnect_user() {
-	xmlrequest("diconnect_user", function() {
-		if (this.readyState == 4) {
-			window.location.href = '/pyhoot/';
-		}
-	});
+  //pkt = {"action":"disconnect"}
+  //ws.send(JSON.stringify(pkt));
+
+  window.location.href = "/pyhoot/";
 }
 
-/**
- * switch screens for the next screen
- * @return nothing
- */
-function switch_screens() {
-	console.log(state);
-	switch (state) {
-		case "question":
-			to = "wait";
-			color = "#dafccc";
-			break;
-		case "leaderboard":
-			to = "question";
-			color = "#ccf6fc";
-			break;
-		case "wait":
-			to = "question";
-			color = "#cccefc"
-			break;
-		case "wait_question":
-			state = "wait";
-			to = "leaderboard";
-			color = "#ffccd7";
-			break;
-	}
-	var from_style_display = document.getElementById(state).style.display;
-	var to_style_display = document.getElementById(to).style.display;
-	from_style_display = [to_style_display, to_style_display = from_style_display][0];
-	document.getElementById(state).style.display = from_style_display;
-	document.getElementById(to).style.display = to_style_display;
-	document.body.style.background = color
-}
 
 /**
  * Send the answer the user clicked on
@@ -116,30 +129,11 @@ function switch_screens() {
  *
  */
 function send_answer(letter) {
-	xmlrequest("answer?letter=" + letter,
-		function() {
-			if (this.readyState == 4 && this.status == 200) {
-			  switchState("wait_question", "#cccefc");
-			}
-		}
-	);
+  pkt = {"action":"sumbitAnswer", "answer":letter}
+  ws.send(JSON.stringify(pkt))
+  switchState("wait_question", "#cccefc");
 }
 
-/**
- * Get the score and place of the player from the server and print it to the screens
- * @return nothing
- */
-function get_score() {
-	xmlrequest("get_score",
-		function() {
-		     if (this.readyState == 4 && this.status == 200) {
-		       var score_place = parse_xml_from_string(this.responseText).getElementsByTagName("score_place")[0];
-		       document.getElementById("score").innerHTML = score_place.getAttribute("score");
-		       document.getElementById("place").innerHTML = ordinal_suffix_of(score_place.getAttribute("place"));
-		     }
-		   }
-	);
-}
 
 /**
  * Add suffix to the number
@@ -161,52 +155,5 @@ function ordinal_suffix_of(i) {
 	return i + "th";
 }
 
-/**
- * Get the title of the question and print it in the right place
- *
- */
-function get_title() {
-	xmlrequest("get_title",
-		function() {
-		     if (this.readyState == 4 && this.status == 200) {
-		       document.getElementById("title").innerHTML =
-			 parse_xml_from_string(this.responseText).getElementsByTagName("title")[0].textContent
-			}
-		}
-	)
-}
-
-/**
- * check if there is a need to move to the next part
- * @return nothing
- */
-
-function move_to_next_page() {
- switch (state) {
-  case "wait":
-    get_title();
-    switch_screens();
-    state = "question";
-    xmlrequest("moved_to_next_question", null);
-    break;
-  case "question":
-    switch_screens();
-    state = "leaderboard";
-    xmlrequest("moved_to_next_question", null);
-    break;
-  case "wait_question":
-    get_score();
-    switch_screens();
-    state = "leaderboard";
-    xmlrequest("moved_to_next_question", null);
-    break;
-  case "leaderboard":
-    get_title()
-    switch_screens();
-    xmlrequest("moved_to_next_question", null);
-    state = "question";
-    break;
-  }
-}
 
 /** @} */

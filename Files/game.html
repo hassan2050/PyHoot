@@ -1,33 +1,46 @@
 <!doctype html>
 <html>
+  <head>
+    <title>PyHoot!</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/pyhoot/icon.png" />
+    <link rel="stylesheet" type="text/css" href="/pyhoot/quiz.css" />
+    <script src="/pyhoot/util.js"></script>
+    <script src="/pyhoot/game.js"></script>
+  </head>
 
-	<head>
+  <body>
+    <center>
+      <div id="wait" style="display:inline;">
+	<h1><span id="pleasewait">Please wait to start</span></h1>
+	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
+      </div>
+      <div id="starting" style="display:None;">
+	<span id="quiz_name" class="quiz_name"></span>
+	<br /><br />
+	<span size="4" id="number_questions" class="number_questions"></span>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+	<h1><span id="opening_countdown"></span></h1>
 
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>PyHoot!</title>
-		<link rel="icon" type="image/png" href="/pyhoot/icon.png">
-		<link rel="stylesheet" type="text/css" href="/pyhoot/game.css" />
-		<link href="https://fonts.googleapis.com/css?family=Ravi+Prakash" rel="stylesheet">
+	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
+      </div>
+      <div id="wait_question" style="display:none;">
+	<h1><span id="pleasewait">Please wait</span></h1>
+	<button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
+      </div>
 
-		<script src="/pyhoot/util.js"></script>
-		<script src="/pyhoot/game.js"></script>
-	</head>
+      <div id="showAnswer" style="display:none;">
+	<h1><span id="correct"></span></h1>
+	<h1><span id="anstext">The right answer/s is/are:</span></h1><br/>
+	<div id="ans"></div>
+	<div>Score: <span id="score"></span> (+<span id="diff_score"></span>)</div>
+	
+	<div><span id="answer_countdown"></span></div>
+      </div>
 
-	<body>
-		<center>
-			<div id="wait" style="display:inline">
-				<h2><span>Please wait</span></h2>
-				<button type="button" onclick="disconnect_user();">Disconnect</button>
-			</div>
-			<div id="wait_question">
-				<h2><span>Please wait</span></h2>
-				<button type="button" onclick="disconnect_user();">Disconnect</button>
-			</div>
-			<div id="question">
-	<div id="title" style="display:inline">
-	</div>
+      <div id="question" style="display:none;">
+	<h1><p id="question_title"></p></h1>
 	<table>
 	  <tr>
 	    <td class="answer_A" id="A_answer" onclick="send_answer('A');">
@@ -46,19 +59,20 @@
 	    </td>
 	  </tr>
 	</table>
-			</div>
-			<div id="leaderboard">
-				<p class="leaderboard">Your score right now is </p>
-				<p class="leaderboard" id="score"></p><br />
-				<p class="leaderboard">and you are </p>
-				<p class="leaderboard" id="place"></p>
-				<p class="leaderboard"> place</p>
-				<br/><br/>
-				<button type="button" class="leave" onclick="disconnect_user();">
-					Leave the game
-				</button>
-			</div>
-		</center>
-	</body>
+	<div><span id="question_countdown"></span></div>
+      </div>
+      <div id="leaderboard"  style="display:none;">
+	<p class="leaderboard">Your score right now is
+	<span class="leaderboard" id="leaderboard_score"></span></p><br />
 
+	  <p class="leaderboard">and you are 
+	  <span class="leaderboard" id="leaderboard_place"></span>
+	  place</p>
+
+	<div><span id="leaderboard_countdown"></span></div>
+
+	      <button id="disconnect" type="button" onclick="disconnect_user();">Disconnect</button>
+      </div>
+    </center>
+  </body>
 </html>

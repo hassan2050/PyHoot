@@ -35,10 +35,10 @@ function getquizes() {
 		if (this.readyState == 4) {
 			if (this.status == 200) {
 				root = JSON.parse(this.responseText);
-				console.log("getquizes " + root);
+
 				string_quizes = "";
 				for (var i = 0; i < root.quizes.length; i++) {
-					string_quizes += "<span class=quiz>" + root.quizes[i] + "</span>";
+					string_quizes += '<button class=quiz onclick="location.href=\'/pyhoot/register_quiz?quiz_name=' + root.quizes[i] + '\';">' + root.quizes[i] + '</button>';
 					if ((i+1) % QUIZES_IN_LINE == 0 && i != 0) {
 						string_quizes += "<br/>";
 					} else if ((i + 1) < root.quizes.length) {

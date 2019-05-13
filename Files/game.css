@@ -1,5 +1,5 @@
 button, input, body {
-    font-family: 'Ravi Prakash', cursive;
+    font-family: 'Arial';
 }
 
 body {
@@ -103,21 +103,23 @@ p {
 }
 
 input {
-    background-color: White;
+    /*background-color: White;*/
     border-style: hidden;
     border-radius: 0.5em;
 }
 span{
-    background-color: white;
+    /*background-color: white;*/
     border-radius: 0.2em;
     font-size: 2em;
     text-align: center;
 }
+
 button {
-    background-color: #6B6A74; /*Warpfiend Grey*/
-    border-color:  #6B6A74; /*Warpfiend Grey*/
+    background-color: #e2e2da;
+    border-color: #6B6A74;
     border-radius: 0.5em;
-    color: White;
-    font-family: 'Ravi Prakash', cursive;
+    border-width: .3em;
+    color: #000000;
+    font-family: 'Arial';
     font-size: 1.80em;
 }

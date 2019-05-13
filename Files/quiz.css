@@ -1,5 +1,10 @@
+html, body { 
+  font-family: 'Arial';
+  height: 100%;
+}
+
 input, body, .Start_playing, .Return_home {
-    font-family: 'Ravi Prakash', cursive;
+    /*font-family: 'Arial';*/
 }
 
 td {
@@ -7,8 +12,8 @@ td {
 }
 
 tr {
-    background-color: White;
-    border-radius: 0.5em;
+    //background-color: White;
+    //border-radius: 0.5em;
 }
 
 img {
@@ -17,7 +22,7 @@ img {
 }
 
 body {
-    background-color: #EC631A;
+    background-color: #79e3f0;
     /*Ryza Dust*/
     color: Black;
 }
@@ -25,6 +30,7 @@ body {
 span {
     background-color: white;
     border-radius: 0.5em;
+    padding: .15em;
     font-size: 2em;
     text-align: center;
 }
@@ -32,18 +38,57 @@ span {
 div {
     border-style: hidden;
     color: Black;
-    display: none;
     padding-top: 1em;
 }
 
+#questionCountdown { 
+  position: absolute; 
+  transform: translate(-50%, -50%);  
+  bottom: 5%;
+}
+
+#question_title { 
+  background-color: white;
+  border-radius: 0.5em;
+  padding: .15em;
+  text-align: center;
+
+  width: 80%;
+  font-size: 1em;
+} 
+
+#countdown { 
+  position: absolute;   
+  transform: translate(-50%, -50%); 
+  top: 50%; 
+  left: 50%;
+}
+
+#pleasewait { 
+  position: absolute;   
+  transform: translate(-50%, -50%); 
+  top: 30%; 
+  left: 50%;
+}
+
+
+#disconnect { 
+  position: absolute; 
+  transform: translate(-50%, -50%);  
+  bottom: 5%;
+}
+
+.leaderboard {
+    font-size: 1.5em;
+}
+
 .Return_home, .button_start {
-    background-color: #6B6A74;
-    /*Warpfiend Grey*/
+    background-color: #e2e2da;
     border-color: #6B6A74;
-    /*Warpfiend Grey*/
     border-radius: 0.5em;
-    color: White;
-    font-family: 'Ravi Prakash', cursive;
+    padding: .2em;
+    border-width: .3em;
+    color: #000000;
     font-size: 1.80em;
 }
 
@@ -61,10 +106,15 @@ table {
 }
 
 .answer_A, .answer_B, .answer_C, .answer_D {
-    border-radius: 0.5em;
-    color: White;
-    font-size: 3em;
-    min-width: 1.5em;
+  border-radius: 0.5em;
+  color: White;
+  font-size: 1.2em;
+  word-wrap: normal;
+  /*padding: .2em;*/
+  width: 5em;
+  height: 3em;
+  padding: 50px 10px;
+  margin: 10px;
 }
 
 .answer_A, .answer_C {
@@ -77,30 +127,25 @@ table {
 
 .answer_A {
     background-color: #991115;
-    /*Mephiston Red*/
 }
 
 .answer_B {
     background-color: #0D407F;
-    /*Macraage Blue*/
 }
 
 .answer_C {
-    background-color: #FFDA00;
-    /*Yriel Yellow*/
+    background-color: #d6cf06;
 }
 
 .answer_D {
     background-color: #00401E;
-    /*Caliban Green*/
 }
 
-input, body, .Start_playing, .Return_home {
-    font-family: 'Ravi Prakash', cursive;
+#ans { 
+    font-size: 1.5em;
 }
 
 .Start_playing, .Return_home {
-    font-family: 'Ravi Prakash', cursive;
     width: 6.7em;
     padding-top: 0.5em;
 }
@@ -115,4 +160,15 @@ input, body, .Start_playing, .Return_home {
 
 .Start_playing {
     font-size: 1.5em;
+}
+
+button {
+  background-color: #e2e2da;
+  border-color: #6B6A74;
+  border-radius: 0.5em;
+  border-width: .3em;
+  color: #000000;
+  font-family: 'Arial';
+  font-size: 1.80em;
+  padding: .2em;
 }

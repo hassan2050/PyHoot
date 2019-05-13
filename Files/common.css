@@ -1,13 +1,12 @@
 body {
-    -moz-animation: random 20s infinite;
+  /*  -moz-animation: random 20s infinite;
     -webkit-animation: random 20s infinite;
-    animation: random 20s infinite;
-    background-color: #5A005A; /*Xereus Purple*/
-    font-family: 'Ravi Prakash', cursive;
+    animation: random 20s infinite;*/
+    background-color: #dc94fb;
+    font-family: 'Arial';
 }
 
-span{
-    background-color: white;
+span {
     border-radius: 0.2em;
     font-size: 2em;
     text-align: center;
@@ -32,18 +31,35 @@ input {
     border-color: white;
     font-size: 2em;
     border-radius: 0.5em;
-    font-family: 'Ravi Prakash', cursive;
 }
 
 button {
-    background-color: #6B6A74; /*Warpfiend Grey*/
-    border-color:  #6B6A74; /*Warpfiend Grey*/
+    background-color: #e2e2da;
+    border-color: #6B6A74;
     border-radius: 0.5em;
-    color: White;
-    font-family: 'Ravi Prakash', cursive;
+    border-width: .3em;
+    color: #000000;
     font-size: 1.80em;
+
 }
 
 .name{
     width:8em;
+}
+
+
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-align: center;
+}
+
+
+.pin{
+    width: 3.7em;
+}
+
+
+.p2{
+    display:none
 }
