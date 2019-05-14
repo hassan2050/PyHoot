@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ -f "pyhoot.pid" ]; then
+  kill `cat pyhoot.pid`
+  rm -f pyhoot.pid
+  echo "pyhoot stopped"
+fi
+
+
+
+

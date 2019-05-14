@@ -4,15 +4,15 @@
   <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 
-		<link rel="stylesheet" type="text/css" href="/pyhoot/common.css" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>PyHoot!</title>
-		<link rel="icon" type="image/png" href="/pyhoot/icon.png">
-		<script src="/pyhoot/util.js"></script>
-		<script src="/pyhoot/home.js"></script>
-	</head>
+    <link rel="stylesheet" type="text/css" href="/pyhoot/common.css" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>PyHoot!</title>
+	<link rel="icon" type="image/png" href="/pyhoot/icon.png">
+	  <script src="/pyhoot/util.js"></script>
+	  <script src="/pyhoot/home.js"></script>
+  </head>
 
-  <body>
+  <body onload="onLoad();">
     <center>
       <form id="join" action="/pyhoot/join" method="get">
 	<div id="p1">
@@ -25,6 +25,7 @@
 			Join!</button>
 		      <br /><br />
 		      <br /><br />
+			    <div id="returnToGame" style="display:none"><button id="returnButton" onclick="location.href='/pyhoot/game.html';">Return</button></div>
 		      <br /><br />
 		      <br /><br />
 			  <button type="button" class="move" onclick="location.href='/pyhoot/new'">

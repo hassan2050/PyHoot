@@ -31,7 +31,7 @@ span {
     background-color: white;
     border-radius: 0.5em;
     padding: .15em;
-    font-size: 2em;
+    font-size: 1.5em;
     text-align: center;
 }
 
@@ -119,7 +119,7 @@ table {
   font-size: 1.2em;
   word-wrap: normal;
   /*padding: .2em;*/
-  width: 5em;
+  width: 6em;
   height: 3em;
   padding: 50px 10px;
   margin: 10px;

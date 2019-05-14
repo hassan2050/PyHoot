@@ -41,11 +41,11 @@ ws.onmessage = function (evt) {
     switchState("starting", "#cfcefc");
   } else if(pkt.action == "opening_countdown") {
     if(pkt.countdown > 1) {
-      $("#opening_countdown").html("Starting in " + pkt.countdown + " seconds.");
+      $("#opening_countdown").html("Starting in " + pkt.countdown + " seconds");
     } else if(pkt.countdown == 0) {
       $("#opening_countdown").html("Starting Now!");
     } else {
-      $("#opening_countdown").html("Starting in " + pkt.countdown + " second.");
+      $("#opening_countdown").html("Starting in " + pkt.countdown + " second");
     }
   } else if(pkt.action == "question") {
     $("#question_title").html(pkt.question.text);
@@ -79,10 +79,13 @@ ws.onmessage = function (evt) {
     switchState("question", "#ccf6fc");
   } else if(pkt.action == "question_countdown") {
     $("#question_countdown").html(pkt.countdown);
+    switchState("question", "#ccf6fc");
   } else if(pkt.action == "answer_countdown") {
     $("#answer_countdown").html(pkt.countdown);
+    switchState("showAnswer", "#cccefc");
   } else if(pkt.action == "leaderboard_countdown") {
     $("#leaderboard_countdown").html(pkt.countdown);
+    switchState("leaderboard", "#ffccd7");
   } else if(pkt.action == "showAnswer") {
     answer_html = "";
     list_answers = pkt.answers;
@@ -96,8 +99,9 @@ ws.onmessage = function (evt) {
     }
     $("#ans").html(answer_html);
 
-    $("#score").html(pkt.score);
-    $("#diff_score").html("(+" + pkt.diff_score +")");
+    $("#score").html("Score: " + pkt.score + " (+" + pkt.diff_score +")");
+    
+    $("#answers_correct").html("Correct: " + pkt.answers_correct + " of " + (pkt.answers_correct+pkt.answers_incorrect));
 
     if (pkt.correct) {
       $("#correct").html("Correct");
@@ -114,9 +118,11 @@ ws.onmessage = function (evt) {
 };
 
 function switchState(newstate, color) {
-  //console.log("switchState " + state + " to " + newstate);
-  $("#"+state).css("display", "none");
-  state = newstate;
+  if(state != newstate) {
+    //console.log("switchState " + state + " to " + newstate);
+    $("#"+state).css("display", "none");
+    state = newstate;
+  }
   $("#"+state).css("display", "inline");
   document.body.style.background = color;
 }
@@ -139,7 +145,7 @@ function disconnect_user() {
  *
  */
 function send_answer(letter) {
-  pkt = {"action":"sumbitAnswer", "answer":letter}
+  pkt = {"action":"submitAnswer", "answer":letter}
   ws.send(JSON.stringify(pkt))
   switchState("wait_question", "#cccefc");
 }

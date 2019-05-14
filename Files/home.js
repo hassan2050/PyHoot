@@ -5,6 +5,19 @@
  * @{
  */
 
+function onLoad() {
+  $.ajax({url:"/pyhoot/get_active_game",
+	     dataType: 'json'})
+    .done(function(pkt) {
+	    if (pkt.ret) {
+	      $("#returnButton").html("Return to " + pkt.name + " Game");
+	      $("#returnToGame").css("display", "inline");
+	    } 
+	  })
+    .fail(function() {
+	  });
+}
+
 /**
  * Change the parts of the page
  */
@@ -60,47 +73,6 @@ function checkName() {
     .fail(function() {
 	    
 	  });
-}
-
-
-/**
- * Check if name / test exist
- */
-function check(type) { //Check if name / test exist
-  var data = $("#join_number").val();
-  if (type == "name") {
-    data += "&name=" + $("#name").val();
-  }
-  
-  $.ajax({url:"check_" + type + "?join_number=" + data})
-    .done(function(pkt) {
-	  })
-    .fail(function() {
-
-	  })
-
-	xmlrequest("check_" + type + 
-		function() {
-			if (this.readyState == 4 && this.status == 200) {
-				var ans = xmlstring_to_boolean(this.responseText);
-				if (type == "test") {
-					if (ans) {
-						changeDiv();
-					} else {
-						document.getElementById("p1_title").innerHTML =
-							"No such Game Pin, enter right one";
-					}
-				} else if (type == "name") {
-					if (ans) {
-						document.getElementById("join").submit();
-					} else {
-						document.getElementById("p2_title").innerHTML =
-							"Name taken, choose another name";
-					}
-				}
-			}
-		}
-	);
 }
 
 /** @} */

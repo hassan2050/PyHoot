@@ -48,7 +48,17 @@ def check_test():
   ret = (join_number in app.common.join_number and app.common.join_number[join_number].TYPE == "MASTER")
   return json.dumps({'ret':ret})
   
+@app.route(config.uriprefix + '/get_active_game')
+def get_active_game():
+  pid = request.cookies.get("pid")
+  if pid not in app.common.pid_client: 
+    return json.dumps({'ret':False})
 
+  _game = app.common.pid_client[pid]
+  if _game.game_master.state != "finish":
+    return json.dumps({'ret':True, 'name':_game.quiz_name})
+  return json.dumps({'ret':False})
+  
 @app.route(config.uriprefix + '/check_name')
 def check_name():
   join_number = int(request.query.get('join_number'))
@@ -113,7 +123,11 @@ def get_join_number():
   pid = request.cookies.get("pid")
   if pid not in app.common.pid_client: abort(400, 'Invalid PID')
 
-  return json.dumps({"join_number": app.common.pid_client[pid].join_number})
+  game = app.common.pid_client[pid]
+  if game.state == "finish":
+    abort(400, 'Game Finished')
+
+  return json.dumps({"join_number": game.join_number})
 
 @app.route(config.uriprefix + '/getnames')
 def getnames():
@@ -292,7 +306,7 @@ class GamePlayerThread(object):
     self.run()
 
   def run(self):
-    self.game.send({"action" : "wait"})
+    #self.game.send({"action" : "wait"})
 
     while self.game.game_master.state != "finish":
       try:
@@ -300,21 +314,23 @@ class GamePlayerThread(object):
       except geventwebsocket.exceptions.WebSocketError:
         break
     
-      logging.info(self.game.quiz_name + ": message %s" % message)
+      logging.info("[%s %s]: message %s" % (self.game.quiz_name, self.game.name, message))
 
       if message is None: break
-      if self.game.state == "done": break
+      if self.game.state == "done": 
+        logging.info("[%s %s]: state is done" % (self.game.quiz_name, self.game.name))
+        break
 
       msg = json.loads(message)
 
-      if msg['action'] == "sumbitAnswer":
+      if msg['action'] == "submitAnswer":
         self.game.answer = msg['answer']
         sendShowAnswer(self.game)
         
       elif msg['action'] == "disconnect":
         self.game.state = "done"
         break
-    self.game.state = "done"
+    #self.game.state = "done"
 
 def sendShowAnswer(game):        
   right_answers = game.game_master.get_correct_answers()
@@ -392,6 +408,8 @@ def main(argv, stdout, environ):
                     datefmt="%m/%d %H:%M:%S", level=args.log_level)
 
   if args.test_flag:  test();   return
+
+  open("pyhoot.pid", "w").write(str(os.getpid()))
 
   start()
 

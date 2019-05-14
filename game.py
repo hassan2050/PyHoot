@@ -38,7 +38,20 @@ class Game(object):
         self._move_to_next_page = False
 
         self.state = None
-        self.websocket = None
+        self._websocket = None
+        self._message_queue = []
+
+    @property
+    def websocket(self): return self._websocket
+
+    @websocket.setter
+    def websocket(self, websocket): 
+      self._time_alive = time.time()
+      self._websocket = websocket
+
+      if self._message_queue:
+        pkt = self._message_queue[-1]
+        self._try_send(pkt)
 
     @property
     def pid(self):
@@ -71,11 +84,24 @@ class Game(object):
             return False
 
     def send(self, pkt):
+      self._message_queue.append(pkt)
+
+      if not self.websocket:
+        dt = time.time() - self._time_alive
+        if dt > 60:
+          self.state = "finish"
+        else:
+          logging.warn("%s: closed socket" % self.name)
+
+      self._try_send(pkt)
+      
+    def _try_send(self, pkt):
       if self.websocket:
         try:
           self.websocket.send(json.dumps(pkt))
+          self._time_alive = time.time()
         except geventwebsocket.exceptions.WebSocketError:
-          logging.warn("websocket closed")
+          logging.warn("websocket closed for %s" % (self.name))
           self.websocket = None
 
     @property
@@ -344,11 +370,18 @@ class GamePlayer(Game):
       self._time = int(time.time() * 100)
       
     def send(self, pkt):
-      if self.websocket:
-        try:
-          self.websocket.send(json.dumps(pkt))
-        except geventwebsocket.exceptions.WebSocketError:
-          logging.warn("websocket closed for %s" % (self.name))
+      if pkt['action'].find("countdown") == -1:
+        self._message_queue.append(pkt)
+
+      if not self.websocket:
+        dt = time.time() - self._time_alive
+        if dt > 60*3:
+          logging.warn("%s: removing player" % self.name)
           self.game_master.remove_player(self.pid)
           self.state = "done"
-          self.websocket = None
+        else:
+          if int(dt) % 10 == 0:
+            logging.warn("%s: closed socket: %s" % (self.name, int(dt)))
+
+      self._try_send(pkt)
+

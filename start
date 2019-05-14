@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+./stop
+./pyhoot.py -d >> error_log 2>&1 &
+echo "pyhoot started"
+
+
