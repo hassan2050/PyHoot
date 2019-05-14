@@ -140,7 +140,6 @@ function getnames() {
 }
 
 function updatePlayers(pkt) {
-  console.log("updatePlayers");
   string_players = "";
   players = pkt.players;
   for (i = 0; i < players.length; i++) {

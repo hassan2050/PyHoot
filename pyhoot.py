@@ -20,6 +20,7 @@ if 1:
 import services
 import common
 import util
+import game
 
 import config
 
@@ -47,6 +48,50 @@ def index():
 def new():
   bottle.redirect(config.uriprefix + '/new.html')
 
+@app.route(config.uriprefix + '/check_test')
+def check_test():
+  join_number = int(request.query.get('join_number'))
+
+  ret = (join_number in app.common.join_number and app.common.join_number[join_number].TYPE == "MASTER")
+  return json.dumps({'ret':ret})
+  
+
+@app.route(config.uriprefix + '/check_name')
+def check_name():
+  join_number = int(request.query.get('join_number'))
+  name = request.query.get('name')
+
+  ret = False
+
+  master = app.common.join_number.get(join_number, None)
+
+  if master and master.TYPE == "MASTER":
+    name_list = [player.name for player in master.get_player_dict().values()]
+
+    if name not in name_list: ret = True
+
+  return json.dumps({'ret':ret})
+  
+@app.route(config.uriprefix + '/join')
+def join():
+  pid = request.cookies.get("pid")
+  if pid in app.common.pid_client:
+    util.remove_from_sysyem(app.common, pid)
+    pid = None
+
+  join_number = int(request.query.get('join_number'))
+  name = request.query.get('name')
+
+  if join_number not in app.common.join_number: 
+    bottle.redirect(config.uriprefix + '/home.html')
+    return
+  else:
+    g = game.GamePlayer(app.common.join_number[join_number], app.common, name)
+    app.common.pid_client[g.pid] = g
+    g.game_master.add_player(g.pid, g)
+    bottle.response.set_cookie("pid", g.pid)    
+    bottle.redirect(config.uriprefix + '/game.html')
+      
 @app.route(config.uriprefix + '/check_test_exist')
 def check_test_exist():
   quiz_name = request.query.get('quiz_name')
@@ -92,6 +137,24 @@ def getnames():
       players.append(player.name)
   return json.dumps(pkt)
 
+@app.route(config.uriprefix + '/register_quiz')
+def register_quiz():
+  pid = request.cookies.get("pid")
+  if pid in app.common.pid_client: 
+    util.remove_from_sysyem(app.common, pid)
+    pid = None
+
+  quiz_name = request.query.get('quiz_name')
+
+  m = game.GameMaster(quiz_name, app.common, app._base_directory)
+  app.common.pid_client[m.pid] = m
+  app.common.join_number[m.join_number] = m
+
+  bottle.response.set_cookie("pid", m.pid)
+
+  bottle.redirect(config.uriprefix + '/quiz.html')
+  
+  
 
 @app.get(config.uriprefix + '/websocket/', apply=[websocket])
 def handle_websocket(ws):
@@ -166,14 +229,17 @@ class GameMasterThread(object):
 
       endtime = time.time() + self.game.get_question()['duration']
 
+      lasttime = None
       while 1:
         if self.game.check_all_players_answered(): break
         if time.time() >= endtime: break
         #logging.debug("timeleft: %d" % int(endtime - time.time()))
 
         t = int(endtime - time.time())
-        for player in self.game.get_player_dict().values():
-          player.send({"action" : "question_countdown", "countdown":t})
+        if t != lasttime:
+          for player in self.game.get_player_dict().values():
+            player.send({"action" : "question_countdown", "countdown":t})
+          lasttime = t
 
         time.sleep(.5)
         
@@ -292,6 +358,8 @@ def server_static(filepath):
 
   if uri_path not in SERVICES_LIST.keys():
     return bottle.static_file(filepath, root="Files")
+
+  return
 
   service_function = SERVICES_LIST[uri_path]
   dic_argument = request.query
