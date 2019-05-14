@@ -99,7 +99,7 @@ class GameMaster(Game):
         super(GameMaster, self).__init__(common)
 
         """name of the quiz"""
-        self._quiz = quiz_name
+        self._quiz_name = quiz_name
 
         """list of the players"""
         self._players_list = {}  # {pid: GamePlayer}
@@ -121,6 +121,14 @@ class GameMaster(Game):
 
         """The time the question started"""
         self._time = None
+
+    @property
+    def quiz_name(self): return self._quiz_name
+
+    @property
+    def join_number(self):
+        """The number of the object in the database"""
+        return self._join_number
 
     def add_player(self, new_pid, game_player):
         """Adding new player for the master"""
@@ -200,7 +208,6 @@ class GameMaster(Game):
         q['number_of_questions'] = len(self.quiz['questions'])
         del q['questions']
         return q
-          
 
     def move_to_next_question(self):
         """Moving to the next question.
@@ -250,10 +257,6 @@ class GameMaster(Game):
         question = question[:question.index('"')]
         return question
 
-    @property
-    def join_number(self):
-        """The number of the object in the database"""
-        return self._join_number
 
 
 class GamePlayer(Game):
@@ -274,6 +277,9 @@ class GamePlayer(Game):
         self._correct = 0
         self._incorrect = 0
         
+    @property
+    def quiz_name(self): return self.game_master.quiz_name
+
     def get_place(self):
         """Return the place of the player"""
         return self._game_master.get_place(self._pid)
@@ -328,7 +334,7 @@ class GamePlayer(Game):
         if answer in ["A", "B", "C", "D"] or answer is None:
             self._answer = answer
             self._time = int(time.time() * 100)
-            logging.warn("answer %s: %s" % (answer, self._time))
+            #logging.warn("answer %s: %s" % (answer, self._time))
         else:
             raise Exception("Answer not allowd")
 

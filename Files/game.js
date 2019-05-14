@@ -12,7 +12,7 @@ var state = "wait";
 var ws = new WebSocket("ws://" + location.host + "/pyhoot/websocket/");
 
 ws.onopen = function() {
-  console.log("onopen");
+  //console.log("onopen");
   ws.send('{"action":"connectPlayer"}');
 };
 
@@ -24,8 +24,6 @@ ws.onerror = function (evt) {
 ws.onmessage = function (evt) {
   console.log("ws.onmessage = " + evt.data);
   var pkt = JSON.parse(evt.data);
-
-  console.log("action = " + pkt.action);
 
   if (pkt.action == "move_to_next_page") {
     move_to_next_page();
@@ -116,7 +114,7 @@ ws.onmessage = function (evt) {
 };
 
 function switchState(newstate, color) {
-  console.log("switchState " + state + " to " + newstate);
+  //console.log("switchState " + state + " to " + newstate);
   $("#"+state).css("display", "none");
   state = newstate;
   $("#"+state).css("display", "inline");

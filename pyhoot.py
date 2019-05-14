@@ -10,14 +10,11 @@ from bottle import get, run, route, static_file, post, Bottle, abort, request, r
 import json
 import glob
 
-from xml.etree import ElementTree
-
 if 1:
   from bottle.ext.websocket import GeventWebSocketServer
   from bottle.ext.websocket import websocket
   import geventwebsocket
 
-import services
 import common
 import util
 import game
@@ -26,10 +23,6 @@ import config
 
 _version = "0.1"
 
-SERVICES_LIST = {service.NAME: service for service in
-                 (services.Service.__subclasses__() +
-                  services.XMLService.__subclasses__()
-                  )}
 
 class BottleApp(bottle.Bottle):
   def __init__(self):
@@ -112,7 +105,6 @@ def getquizes():
     path, f = os.path.split(fn)
     name, ext = os.path.splitext(f)
     root['quizes'].append(name)
-  logging.warn("quizes %s" % root)
   return json.dumps(root)
 
 
@@ -203,7 +195,7 @@ class GameMasterThread(object):
 
   def run(self):
     info = self.game.get_information()
-    logging.debug("info: %s" % info)
+    logging.debug(self.game.quiz_name + ": info: %s" % info)
     self.game.state = "opening"
     self.game.send({"action" : "opening", "info":info})
     for player in self.game.get_player_dict().values():
@@ -220,7 +212,7 @@ class GameMasterThread(object):
       question = self.game.get_question()
       if not question: break
       self.game.start_question()
-      logging.debug("question state")
+      logging.debug(self.game.quiz_name + ": question state")
       self.game.state = "question"
       self.game.send({"action" : "question", "question":question})
 
@@ -244,7 +236,7 @@ class GameMasterThread(object):
         time.sleep(.5)
         
       answers = self.game.get_correct_answers()
-      logging.debug("answer state: %s" % answers)
+      logging.debug(self.game.quiz_name + ": answer state: %s" % answers)
       self.game.state = "answer"
       self.game.send({"action" : "answer", "answers":answers})
       for player in self.game.get_player_dict().values():
@@ -258,7 +250,7 @@ class GameMasterThread(object):
 
       if len(self.game.get_player_dict().values()) > 1:
         leaderboard = self.game.get_leaderboard()
-        logging.debug("leaderboard state")
+        logging.debug(self.game.quiz_name + ": leaderboard state")
         self.game.state = "leaderboard"
         self.game.send({"action" : "leaderboard", "leaderboard":leaderboard})
         for player in self.game.get_player_dict().values():
@@ -277,11 +269,11 @@ class GameMasterThread(object):
 
       self.game.move_to_next_question()
 
-      logging.debug("questions left: %s" % self.game.get_left_questions())
+      logging.debug(self.game.quiz_name + ": questions left: %s" % self.game.get_left_questions())
       if self.game.get_left_questions() == 0:
         break
 
-    logging.debug("finish state")
+    logging.debug(self.game.quiz_name + ": finish state")
     self.game.state = "finish"
     self.game.send({"action" : "finish"})
     for player in self.game.get_player_dict().values():
@@ -308,7 +300,7 @@ class GamePlayerThread(object):
       except geventwebsocket.exceptions.WebSocketError:
         break
     
-      logging.info("message %s" % message)
+      logging.info(self.game.quiz_name + ": message %s" % message)
 
       if message is None: break
       if self.game.state == "done": break
@@ -348,75 +340,11 @@ def sendShowAnswer(game):
              "diff_score":game.diff_score, 
              "score":game.score})
 
-    
-
 @app.route(config.uriprefix + '/<filepath:path>')
 def server_static(filepath):
   self = app
-
   uri_path = "/" + filepath
-
-  if uri_path not in SERVICES_LIST.keys():
-    return bottle.static_file(filepath, root="Files")
-
-  return
-
-  service_function = SERVICES_LIST[uri_path]
-  dic_argument = request.query
-
-  dic_argument.update({"common": self.common,
-                       "base_directory": self._base_directory})
-
-  _game = None
-
-  if "pid" in request.cookies:
-    pid = request.cookies.get("pid")
-    if pid in self.common.pid_client:
-      _game = self.common.pid_client[pid]
-
-  dic_argument.update({"game": _game})
-  if _game is not None:
-      dic_argument.update({"pid": _game.pid})
-      if (_game.TYPE == "PLAYER" and
-              _game.game_master is not None):
-          dic_argument.update(
-              {"server_pid": _game.game_master.pid})
-
-  # Remove un-usable keys
-  dic_argument.pop('self', None)
-
-  if 0:
-    print("join_number", list(self.common.join_number.items()))
-    print("pid_clients", list(self.common.pid_client.items()))
-    print("dic_argument", list(dic_argument.items()))
-
-  self._file = service_function(
-      *(dic_argument[arg] for arg in
-        service_function.__init__.__code__.co_varnames if
-        arg in dic_argument)
-  )
-
-  if self._file.NAME == "FILE":
-    body = self._file.content()
-    print (repr(body))
-    return body
-
-  _extra_headers = {}
-  headers = self._file.headers(_extra_headers)
-  if 0:
-    print ('headers', headers)
-
-  if "Set-Cookie" in headers:
-    cname, cvalue = headers.get('Set-Cookie')
-    bottle.response.set_cookie(cname, cvalue)
-
-  if "Status-Code" in headers and headers['Status-Code'] == 302:
-    bottle.redirect(headers.get("Location"))
-    return
-  
-  body = self._file.content()
-  #print (repr(body))
-  return body
+  return bottle.static_file(filepath, root="Files")
 
 def start():
   host,port = (config.hostname, config.port)
