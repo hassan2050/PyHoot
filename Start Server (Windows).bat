@@ -1,2 +1,2 @@
-cd ..
-python -m PyHoot
+python3 ./pyhoot.py
+
