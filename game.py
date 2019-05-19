@@ -149,6 +149,9 @@ class GameMaster(Game):
         self._time = None
 
     @property
+    def game_master(self): return self
+
+    @property
     def quiz_name(self): return self._quiz_name
 
     @property

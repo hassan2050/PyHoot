@@ -9,7 +9,10 @@ var PLAYERS_IN_LINE = 3;
 var state = "Registration";
 timer = window.setTimeout(getnames, 1000);
 
-var ws = new WebSocket("ws://" + location.host + "/pyhoot/websocket/");
+var pathParts = window.location.pathname.split('/');
+pathParts = pathParts.slice(0, -1);
+baseuri = pathParts.join('/');
+var ws = new WebSocket("ws://" + location.host + baseuri + "/websocket/");
 
 ws.onopen = function() {
   console.log("onopen");
@@ -120,7 +123,7 @@ function get_join_number() {
 	    $("#join_number").html(pkt.join_number);
 	  })
     .fail(function() {
-	    window.location.href = '/pyhoot/';
+	    window.location.href = '';
 	  })
 }
 
@@ -135,7 +138,7 @@ function getnames() {
 	    updatePlayers(pkt);
 	  })
     .fail(function() {
-	    window.location.href = '/pyhoot/';
+	    window.location.href = '';
 	  })
 }
 

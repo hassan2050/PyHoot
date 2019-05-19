@@ -6,7 +6,7 @@
  */
 
 function onLoad() {
-  $.ajax({url:"/pyhoot/get_active_game",
+  $.ajax({url:"get_active_game",
 	     dataType: 'json'})
     .done(function(pkt) {
 	    if (pkt.ret) {
@@ -44,7 +44,7 @@ function check_length_name() {
 function checkTest() { //Check if name / test exist
   var join_number = $("#join_number").val();
   
-  $.ajax({url:"/pyhoot/check_test?join_number=" + join_number,
+  $.ajax({url:"check_test?join_number=" + join_number,
 	  dataType: 'json'})
     .done(function(pkt) {
 	    if (pkt.ret) {
@@ -60,7 +60,7 @@ function checkTest() { //Check if name / test exist
 
 function checkName() {
   
-  $.ajax({url:"/pyhoot/check_name?join_number=" + $("#join_number").val() + "&name=" + $("#name").val(),
+  $.ajax({url:"check_name?join_number=" + $("#join_number").val() + "&name=" + $("#name").val(),
 	     dataType: 'json'})
     .done(function(pkt) {
 	    console.log("name:"+pkt.ret);

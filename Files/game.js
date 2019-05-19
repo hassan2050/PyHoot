@@ -9,7 +9,10 @@
 // The current state of the game
 var state = "wait";
 
-var ws = new WebSocket("ws://" + location.host + "/pyhoot/websocket/");
+var pathParts = window.location.pathname.split('/');
+pathParts = pathParts.slice(0, -1);
+baseuri = pathParts.join('/');
+var ws = new WebSocket("ws://" + location.host + baseuri + "/websocket/");
 
 ws.onopen = function() {
   //console.log("onopen");
@@ -18,7 +21,7 @@ ws.onopen = function() {
 
 ws.onerror = function (evt) {
   console.log("onerror: " + evt);
-  windows.location.href = "/pyhoot/";
+  windows.location.href = "";
 }
 
 ws.onmessage = function (evt) {
@@ -28,7 +31,7 @@ ws.onmessage = function (evt) {
   if (pkt.action == "move_to_next_page") {
     move_to_next_page();
   } else if (pkt.action == "invalid_pid") {
-    window.location.href = "/pyhoot/";
+    window.location.href = "";
     return;
   } else if (pkt.action == "wait") {
     
@@ -135,7 +138,7 @@ function disconnect_user() {
   //pkt = {"action":"disconnect"}
   //ws.send(JSON.stringify(pkt));
 
-  window.location.href = "/pyhoot/";
+  window.location.href = "";
 }
 
 
