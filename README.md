@@ -1,10 +1,6 @@
 # PyHoot
 
-*Kahoot clone based on Python, final project for Gvahim.*
-
-Warning:
-Python 2.7 must be installed on the system.
-if you don't have it have it, you can download it from here. [Link](https://www.python.org/ftp/python/2.7.13/python-2.7.13.msi)
+*Kahoot clone based on Python, updated*
 
 **When you install in `Customize Python 2.7.x`, make sure you click on `Add python.exe to Path` and then on `Will be installed on local hard drive`.**
 
